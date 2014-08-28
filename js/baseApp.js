@@ -114,7 +114,7 @@ BaseApp.prototype.createScene = function() {
 BaseApp.prototype.createCamera = function() {
 
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    this.camera.position.set( 0, 0, 100 );
+    this.camera.position.set( 150, 100, 365 );
 
     console.log('dom =', this.renderer.domElement);
 };
@@ -133,7 +133,7 @@ BaseApp.prototype.createControls = function() {
 
     this.controls.keys = [ 65, 83, 68 ];
 
-    var lookAt = new THREE.Vector3(0, 0, 0);
+    var lookAt = new THREE.Vector3(-50, -20, 40);
     this.controls.setLookAt(lookAt);
 };
 

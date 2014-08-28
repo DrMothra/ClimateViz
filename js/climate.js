@@ -13,9 +13,9 @@ function addGroundPlane(scene, width, height) {
 
     // rotate and position the plane
     plane.rotation.x=-0.5*Math.PI;
-    plane.position.x=0;
+    plane.position.x=-45;
     plane.position.y=0;
-    plane.position.z=0;
+    plane.position.z=120;
 
     scene.add(plane);
 
@@ -24,9 +24,9 @@ function addGroundPlane(scene, width, height) {
     planeMaterial = new THREE.MeshLambertMaterial({color: 0x16283c});
     plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x=-0.5*Math.PI;
-    plane.position.x=0;
+    plane.position.x=-45;
     plane.position.y=-0.1;
-    plane.position.z=0;
+    plane.position.z=120;
     //Give it a name
     plane.name = 'ground';
 
@@ -61,7 +61,6 @@ ClimateApp.prototype.init = function(container) {
 
 ClimateApp.prototype.update = function() {
     //Perform any updates
-    var clicked = this.mouse.clicked;
 
     /*
      if(this.updateRequired) {
@@ -69,6 +68,7 @@ ClimateApp.prototype.update = function() {
      }
      */
     //Perform mouse hover
+    /*
     var vector = new THREE.Vector3(( this.mouse.x / window.innerWidth ) * 2 - 1, -( this.mouse.y / window.innerHeight ) * 2 + 1, 0.5);
     this.projector.unprojectVector(vector, this.camera);
 
@@ -76,9 +76,11 @@ ClimateApp.prototype.update = function() {
 
     this.hoverObjects.length = 0;
     this.hoverObjects = raycaster.intersectObjects(this.scene.children, true);
+    */
 
     //Check hover actions
     //hideResults();
+    /*
     if(this.hoverObjects.length != 0) {
         for(var i=0; i<this.hoverObjects.length; ++i) {
             var obj = this.hoverObjects[i].object;
@@ -94,6 +96,7 @@ ClimateApp.prototype.update = function() {
             }
         }
     }
+    */
     BaseApp.prototype.update.call(this);
 };
 
@@ -102,9 +105,88 @@ ClimateApp.prototype.createScene = function() {
     BaseApp.prototype.createScene.call(this);
 
     //Create ground
-    this.GROUND_DEPTH = 240;
+    this.GROUND_DEPTH = 480;
     this.GROUND_WIDTH = 180;
     addGroundPlane(this.scene, this.GROUND_WIDTH, this.GROUND_DEPTH);
+
+    this.minGroup = new THREE.Object3D();
+    this.minGroup.name = 'minGroup';
+    this.maxGroup = new THREE.Object3D();
+    this.maxGroup.name = 'maxGroup';
+    this.scene.add(this.minGroup);
+    this.scene.add(this.maxGroup);
+
+    this.maxMaterial = new THREE.MeshLambertMaterial( {color : 0xff0000});
+    this.minMaterial = new THREE.MeshLambertMaterial( {color : 0x0000ff});
+
+    this.barGeom = new THREE.BoxGeometry(2, 2, 2, 1, 1, 1);
+};
+
+ClimateApp.prototype.createGUI = function() {
+    //Create GUI - use dat.GUI for now
+    this.guiControls = new function() {
+        this.filename = '';
+        this.ShowLabels = false;
+
+        //Colours
+        this.Max = "#ff0000";
+        this.Min = "#0000ff";
+
+        //Categories
+        this.ShowMax = true;
+        this.ShowMin = true;
+
+        //Values
+        this.ShowValues = true;
+    };
+
+    //Create GUI
+    var gui = new dat.GUI();
+    var _this = this;
+    //Create two folders - Appearance and Data
+    gui.add(this.guiControls, 'filename', this.filename).listen();
+    this.guiAppear = gui.addFolder("Appearance");
+    this.guiAppear.addColor(this.guiControls, 'Max').onChange(function(value) {
+        _this.onMaxColourChanged(value);
+    });
+    this.guiAppear.addColor(this.guiControls, 'Min').onChange(function(value) {
+        _this.onMinColourChanged(value);
+    });
+
+    this.guiData = gui.addFolder("Data");
+
+    this.guiData.add(this.guiControls, 'ShowMax').onChange(function(value) {
+        _this.onShowGroup('max', value);
+    });
+    this.guiData.add(this.guiControls, 'ShowMin').onChange(function(value) {
+        _this.onShowGroup('min', value);
+    });
+};
+
+ClimateApp.prototype.onMaxColourChanged = function(value) {
+    //Alter colour for points values
+    if(this.guiControls.ShowMax) {
+        //Get points group
+        var group = this.scene.getObjectByName('maxGroup');
+        if(group) {
+            for(var child=0; child<group.children.length; ++child) {
+                group.children[child].material.color.setStyle(value);
+            }
+        }
+    }
+};
+
+ClimateApp.prototype.onMinColourChanged = function(value) {
+    //Alter colour for points values
+    if(this.guiControls.ShowMin) {
+        //Get points group
+        var group = this.scene.getObjectByName('minGroup');
+        if(group) {
+            for(var child=0; child<group.children.length; ++child) {
+                group.children[child].material.color.setStyle(value);
+            }
+        }
+    }
 };
 
 ClimateApp.prototype.generateData = function() {
@@ -113,29 +195,45 @@ ClimateApp.prototype.generateData = function() {
     this.startYear = this.data[0].Year;
     this.endYear = this.data[this.data.length-1].Year;
 
-    for(var i= 0, row=0; i<12; ++i, ++row) {
+    for(var i= 0, row=0; i<this.data.length; ++i, ++row) {
         var item = this.data[i];
-        this.renderItem(item, row > 12 ? 0 : row);
+        if(row > 11) row = 0;
+        this.renderItem(item, row);
     }
 };
 
 ClimateApp.prototype.renderItem = function(item, row) {
     //Render temperatures at given row
-    var maxMaterial = new THREE.MeshLambertMaterial( {color : 0xff0000});
-    var minMaterial = new THREE.MeshLambertMaterial( {color : 0x0000ff});
-    var barScale = new THREE.Vector3(1, 1, 1);
 
-    var pos = new THREE.Vector3();
-
-    var barGeom = new THREE.BoxGeometry(2, 2, 2);
-    var bar = new THREE.Mesh(barGeom, minMaterial);
+    var bar = new THREE.Mesh(this.barGeom, this.minMaterial);
     bar.scale.y = item['Min'];
+    if(bar.scale.y == 0) bar.scale.y = 0.001;
     if(bar.scale.y < 0)  bar.scale.y *=-1;
-    bar.position.x = row * -3;
+    bar.position.x = (row * -8) + 2;
     bar.position.y = item['Min'] < 0 ? -bar.scale.y : bar.scale.y;
-    bar.position.z = item['Year'] - this.startYear;
+    bar.position.z = (item['Year'] - this.startYear) * 5;
 
-    this.scene.add(bar);
+    this.minGroup.add(bar);
+
+    bar = new THREE.Mesh(this.barGeom, this.maxMaterial);
+    bar.scale.y = item['Max'];
+    bar.position.x = (row * -8) - 2;
+    bar.position.y = bar.scale.y;
+    bar.position.z = (item['Year'] - this.startYear) * 5;
+
+    this.maxGroup.add(bar);
+};
+
+ClimateApp.prototype.onShowGroup = function(attribute, value) {
+    //Show relevant dataset
+    var group = this.scene.getObjectByName(attribute+'Group');
+    if(group) {
+        group.traverse(function(obj) {
+            if(obj instanceof THREE.Mesh) {
+                obj.visible = value;
+            }
+        });
+    }
 };
 
 ClimateApp.prototype.parseFile = function() {
@@ -190,17 +288,33 @@ ClimateApp.prototype.onSelectFile = function(evt) {
         alert('sorry, file apis not supported');
 };
 
+ClimateApp.prototype.onKeyDown = function(event) {
+    //Do any base app key handling
+    BaseApp.prototype.keydown.call(this, event);
+
+    switch (event.keyCode) {
+        case 80: //'P'
+            console.log("CamPos=", this.camera.position);
+            console.log("Lookat=", this.controls.getLookAt());
+            break;
+    }
+};
+
 $(document).ready(function() {
     //Initialise app
     var container = document.getElementById("WebGL-output");
     var app = new ClimateApp();
     app.init(container);
     app.createScene();
-    //app.createGUI();
+    app.createGUI();
 
     //GUI callbacks
     $("#chooseFile").on("change", function(evt) {
         app.onSelectFile(evt);
+    });
+
+    $(document).keydown(function (event) {
+        app.onKeyDown(event);
     });
 
     app.run();
