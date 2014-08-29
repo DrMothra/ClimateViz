@@ -34,6 +34,16 @@ function addGroundPlane(scene, width, height) {
     scene.add(plane);
 }
 
+function showGroup(group, show) {
+    if(group) {
+        group.traverse(function(obj) {
+            if(obj instanceof THREE.Mesh) {
+                obj.visible = show;
+            }
+        });
+    }
+}
+
 //Init this app from base
 function ClimateApp() {
     BaseApp.call(this);
@@ -116,6 +126,26 @@ ClimateApp.prototype.createScene = function() {
     this.scene.add(this.minGroup);
     this.scene.add(this.maxGroup);
 
+    //Add group for each month
+    var months = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    this.monthMinGroups = [];
+    this.monthMaxGroups = [];
+
+    //Add minimum month groups
+    for(var i=0; i<months.length; ++i) {
+        this.monthMinGroups.push(new THREE.Object3D());
+        this.monthMinGroups[i].name = months[i]+'Min';
+        this.minGroup.add(this.monthMinGroups[i]);
+    }
+
+    //Add maximum month groups
+    for(var i=0; i<months.length; ++i) {
+        this.monthMaxGroups.push(new THREE.Object3D());
+        this.monthMaxGroups[i].name = months[i]+'Max';
+        this.maxGroup.add(this.monthMaxGroups[i]);
+    }
+
     this.maxMaterial = new THREE.MeshLambertMaterial( {color : 0xff0000});
     this.minMaterial = new THREE.MeshLambertMaterial( {color : 0x0000ff});
 
@@ -135,6 +165,20 @@ ClimateApp.prototype.createGUI = function() {
         //Categories
         this.ShowMax = true;
         this.ShowMin = true;
+
+        //Months
+        this.Jan = true;
+        this.Feb = true;
+        this.Mar = true;
+        this.Apr = true;
+        this.May = true;
+        this.Jun = true;
+        this.Jul = true;
+        this.Aug = true;
+        this.Sep = true;
+        this.Oct = true;
+        this.Nov = true;
+        this.Dec = true;
 
         //Values
         this.ShowValues = true;
@@ -161,6 +205,44 @@ ClimateApp.prototype.createGUI = function() {
     this.guiData.add(this.guiControls, 'ShowMin').onChange(function(value) {
         _this.onShowGroup('min', value);
     });
+
+    //Months
+    this.guiData.add(this.guiControls, 'Jan').onChange(function(value) {
+        _this.onShowMonth('January', value);
+    });
+    this.guiData.add(this.guiControls, 'Feb').onChange(function(value) {
+        _this.onShowMonth('February', value);
+    });
+    this.guiData.add(this.guiControls, 'Mar').onChange(function(value) {
+        _this.onShowMonth('March', value);
+    });
+    this.guiData.add(this.guiControls, 'Apr').onChange(function(value) {
+        _this.onShowMonth('April', value);
+    });
+    this.guiData.add(this.guiControls, 'May').onChange(function(value) {
+        _this.onShowMonth('May', value);
+    });
+    this.guiData.add(this.guiControls, 'Jun').onChange(function(value) {
+        _this.onShowMonth('June', value);
+    });
+    this.guiData.add(this.guiControls, 'Jul').onChange(function(value) {
+        _this.onShowMonth('July', value);
+    });
+    this.guiData.add(this.guiControls, 'Aug').onChange(function(value) {
+        _this.onShowMonth('August', value);
+    });
+    this.guiData.add(this.guiControls, 'Sep').onChange(function(value) {
+        _this.onShowMonth('September', value);
+    });
+    this.guiData.add(this.guiControls, 'Oct').onChange(function(value) {
+        _this.onShowMonth('October', value);
+    });
+    this.guiData.add(this.guiControls, 'Nov').onChange(function(value) {
+        _this.onShowMonth('November', value);
+    });
+    this.guiData.add(this.guiControls, 'Dec').onChange(function(value) {
+        _this.onShowMonth('December', value);
+    });
 };
 
 ClimateApp.prototype.onMaxColourChanged = function(value) {
@@ -169,9 +251,11 @@ ClimateApp.prototype.onMaxColourChanged = function(value) {
         //Get points group
         var group = this.scene.getObjectByName('maxGroup');
         if(group) {
-            for(var child=0; child<group.children.length; ++child) {
-                group.children[child].material.color.setStyle(value);
-            }
+            group.traverse(function(obj) {
+                if(obj instanceof THREE.Mesh) {
+                    obj.material.color.setStyle(value);
+                }
+            });
         }
     }
 };
@@ -182,9 +266,11 @@ ClimateApp.prototype.onMinColourChanged = function(value) {
         //Get points group
         var group = this.scene.getObjectByName('minGroup');
         if(group) {
-            for(var child=0; child<group.children.length; ++child) {
-                group.children[child].material.color.setStyle(value);
-            }
+            group.traverse(function(obj) {
+                if(obj instanceof THREE.Mesh) {
+                    obj.material.color.setStyle(value);
+                }
+            });
         }
     }
 };
@@ -213,7 +299,7 @@ ClimateApp.prototype.renderItem = function(item, row) {
     bar.position.y = item['Min'] < 0 ? -bar.scale.y : bar.scale.y;
     bar.position.z = (item['Year'] - this.startYear) * 5;
 
-    this.minGroup.add(bar);
+    this.monthMinGroups[row].add(bar);
 
     bar = new THREE.Mesh(this.barGeom, this.maxMaterial);
     bar.scale.y = item['Max'];
@@ -221,7 +307,7 @@ ClimateApp.prototype.renderItem = function(item, row) {
     bar.position.y = bar.scale.y;
     bar.position.z = (item['Year'] - this.startYear) * 5;
 
-    this.maxGroup.add(bar);
+    this.monthMaxGroups[row].add(bar);
 };
 
 ClimateApp.prototype.onShowGroup = function(attribute, value) {
@@ -234,6 +320,20 @@ ClimateApp.prototype.onShowGroup = function(attribute, value) {
             }
         });
     }
+};
+
+ClimateApp.prototype.onShowMonth = function(attribute, value) {
+    //Show relevant month
+    if(this.guiControls.ShowMax) {
+        var group = this.scene.getObjectByName(attribute+'Max', true);
+        showGroup(group, value);
+    }
+
+    if(this.guiControls.ShowMin) {
+        group = this.scene.getObjectByName(attribute+'Min', true);
+        showGroup(group, value);
+    }
+
 };
 
 ClimateApp.prototype.parseFile = function() {
