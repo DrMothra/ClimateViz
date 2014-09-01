@@ -2,6 +2,13 @@
  * Created by DrTone on 28/08/2014.
  */
 
+var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function rowToMonth(row) {
+    return months[row];
+}
+
 function addGroundPlane(scene, width, height) {
     // create the ground plane
     var planeGeometry = new THREE.PlaneGeometry(width,height,1,1);
@@ -127,8 +134,6 @@ ClimateApp.prototype.createScene = function() {
     this.scene.add(this.maxGroup);
 
     //Add group for each month
-    var months = ['January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'];
     this.monthMinGroups = [];
     this.monthMaxGroups = [];
 
@@ -208,40 +213,40 @@ ClimateApp.prototype.createGUI = function() {
 
     //Months
     this.guiData.add(this.guiControls, 'Jan').onChange(function(value) {
-        _this.onShowMonth('January', value);
+        _this.onShowMonth('Jan', value);
     });
     this.guiData.add(this.guiControls, 'Feb').onChange(function(value) {
-        _this.onShowMonth('February', value);
+        _this.onShowMonth('Feb', value);
     });
     this.guiData.add(this.guiControls, 'Mar').onChange(function(value) {
-        _this.onShowMonth('March', value);
+        _this.onShowMonth('Mar', value);
     });
     this.guiData.add(this.guiControls, 'Apr').onChange(function(value) {
-        _this.onShowMonth('April', value);
+        _this.onShowMonth('Apr', value);
     });
     this.guiData.add(this.guiControls, 'May').onChange(function(value) {
         _this.onShowMonth('May', value);
     });
     this.guiData.add(this.guiControls, 'Jun').onChange(function(value) {
-        _this.onShowMonth('June', value);
+        _this.onShowMonth('Jun', value);
     });
     this.guiData.add(this.guiControls, 'Jul').onChange(function(value) {
-        _this.onShowMonth('July', value);
+        _this.onShowMonth('Jul', value);
     });
     this.guiData.add(this.guiControls, 'Aug').onChange(function(value) {
-        _this.onShowMonth('August', value);
+        _this.onShowMonth('Aug', value);
     });
     this.guiData.add(this.guiControls, 'Sep').onChange(function(value) {
-        _this.onShowMonth('September', value);
+        _this.onShowMonth('Sep', value);
     });
     this.guiData.add(this.guiControls, 'Oct').onChange(function(value) {
-        _this.onShowMonth('October', value);
+        _this.onShowMonth('Oct', value);
     });
     this.guiData.add(this.guiControls, 'Nov').onChange(function(value) {
-        _this.onShowMonth('November', value);
+        _this.onShowMonth('Nov', value);
     });
     this.guiData.add(this.guiControls, 'Dec').onChange(function(value) {
-        _this.onShowMonth('December', value);
+        _this.onShowMonth('Dec', value);
     });
 };
 
@@ -292,6 +297,7 @@ ClimateApp.prototype.renderItem = function(item, row) {
     //Render temperatures at given row
 
     var bar = new THREE.Mesh(this.barGeom, this.minMaterial);
+    bar.name = rowToMonth(row) + 'Min' + item['Year'];
     bar.scale.y = item['Min'];
     if(bar.scale.y == 0) bar.scale.y = 0.001;
     if(bar.scale.y < 0)  bar.scale.y *=-1;
@@ -302,6 +308,7 @@ ClimateApp.prototype.renderItem = function(item, row) {
     this.monthMinGroups[row].add(bar);
 
     bar = new THREE.Mesh(this.barGeom, this.maxMaterial);
+    bar.name = rowToMonth(row) + 'Max' + item['Year'];
     bar.scale.y = item['Max'];
     bar.position.x = (row * -8) - 2;
     bar.position.y = bar.scale.y;
@@ -313,10 +320,14 @@ ClimateApp.prototype.renderItem = function(item, row) {
 ClimateApp.prototype.onShowGroup = function(attribute, value) {
     //Show relevant dataset
     var group = this.scene.getObjectByName(attribute+'Group');
+    var _this = this;
     if(group) {
         group.traverse(function(obj) {
             if(obj instanceof THREE.Mesh) {
-                obj.visible = value;
+                var month = obj.name.substr(0, obj.name.length-7);
+                if(_this.guiControls[month]){
+                    obj.visible = value;
+                }
             }
         });
     }
