@@ -170,6 +170,7 @@ ClimateApp.prototype.createGUI = function() {
         //Categories
         this.ShowMax = true;
         this.ShowMin = true;
+        this.ShowAllMonths = true;
 
         //Months
         this.Jan = true;
@@ -212,42 +213,19 @@ ClimateApp.prototype.createGUI = function() {
     });
 
     //Months
-    this.guiData.add(this.guiControls, 'Jan').onChange(function(value) {
-        _this.onShowMonth('Jan', value);
+    this.guiData.add(this.guiControls, 'ShowAllMonths').onChange(function(value) {
+        _this.onShowMonth('All', value);
     });
-    this.guiData.add(this.guiControls, 'Feb').onChange(function(value) {
-        _this.onShowMonth('Feb', value);
-    });
-    this.guiData.add(this.guiControls, 'Mar').onChange(function(value) {
-        _this.onShowMonth('Mar', value);
-    });
-    this.guiData.add(this.guiControls, 'Apr').onChange(function(value) {
-        _this.onShowMonth('Apr', value);
-    });
-    this.guiData.add(this.guiControls, 'May').onChange(function(value) {
-        _this.onShowMonth('May', value);
-    });
-    this.guiData.add(this.guiControls, 'Jun').onChange(function(value) {
-        _this.onShowMonth('Jun', value);
-    });
-    this.guiData.add(this.guiControls, 'Jul').onChange(function(value) {
-        _this.onShowMonth('Jul', value);
-    });
-    this.guiData.add(this.guiControls, 'Aug').onChange(function(value) {
-        _this.onShowMonth('Aug', value);
-    });
-    this.guiData.add(this.guiControls, 'Sep').onChange(function(value) {
-        _this.onShowMonth('Sep', value);
-    });
-    this.guiData.add(this.guiControls, 'Oct').onChange(function(value) {
-        _this.onShowMonth('Oct', value);
-    });
-    this.guiData.add(this.guiControls, 'Nov').onChange(function(value) {
-        _this.onShowMonth('Nov', value);
-    });
-    this.guiData.add(this.guiControls, 'Dec').onChange(function(value) {
-        _this.onShowMonth('Dec', value);
-    });
+
+    for(var i=0; i<months.length; ++i) {
+        var monthData = this.guiData.add(this.guiControls, months[i]);
+        monthData.listen();
+        (function(i) {
+            monthData.onChange(function (value) {
+                _this.onShowMonth(months[i], value);
+            });
+        })(i);
+    }
 };
 
 ClimateApp.prototype.onMaxColourChanged = function(value) {
@@ -334,17 +312,30 @@ ClimateApp.prototype.onShowGroup = function(attribute, value) {
 };
 
 ClimateApp.prototype.onShowMonth = function(attribute, value) {
-    //Show relevant month
-    if(this.guiControls.ShowMax) {
-        var group = this.scene.getObjectByName(attribute+'Max', true);
-        showGroup(group, value);
+    //Show relevant month or months
+    var displayMonths = [];
+
+    if(attribute == 'All') {
+        //Toggle all months
+        displayMonths = months;
+        for(var j=0; j<months.length; ++j) {
+            this.guiControls[months[j]] = value;
+        }
+    } else {
+        displayMonths.push(attribute);
     }
 
-    if(this.guiControls.ShowMin) {
-        group = this.scene.getObjectByName(attribute+'Min', true);
-        showGroup(group, value);
-    }
+    for(var i=0; i<displayMonths.length; ++i) {
+        if(this.guiControls.ShowMax) {
+            var group = this.scene.getObjectByName(displayMonths[i]+'Max', true);
+            showGroup(group, value);
+        }
 
+        if(this.guiControls.ShowMin) {
+            group = this.scene.getObjectByName(displayMonths[i]+'Min', true);
+            showGroup(group, value);
+        }
+    }
 };
 
 ClimateApp.prototype.parseFile = function() {
