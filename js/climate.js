@@ -141,6 +141,9 @@ ClimateApp.prototype.createScene = function() {
     for(var i=0; i<months.length; ++i) {
         this.monthMinGroups.push(new THREE.Object3D());
         this.monthMinGroups[i].name = months[i]+'Min';
+        this.monthMinGroups[i].total = 0;
+        this.monthMinGroups[i].bars = 0;
+        this.monthMinGroups[i].avg = 0;
         this.minGroup.add(this.monthMinGroups[i]);
     }
 
@@ -153,8 +156,16 @@ ClimateApp.prototype.createScene = function() {
 
     this.maxMaterial = new THREE.MeshLambertMaterial( {color : 0xff0000});
     this.minMaterial = new THREE.MeshLambertMaterial( {color : 0x0000ff});
-
     this.barGeom = new THREE.BoxGeometry(2, 2, 2, 1, 1, 1);
+
+    this.avgMaterial = new THREE.MeshLambertMaterial( {color : 0xffff00});
+    this.avgGeom = new THREE.SphereGeometry(0.5);
+    this.avgLineData = [];
+    for(var i=0; i<months.length; ++i) {
+        this.avgLineData.push(new Array());
+    }
+    this.lineGeometry = new THREE.BufferGeometry();
+    this.lineMaterial = new THREE.LineBasicMaterial({ color : 0xffff00 });
 };
 
 ClimateApp.prototype.createGUI = function() {
@@ -269,6 +280,24 @@ ClimateApp.prototype.generateData = function() {
         if(row > 11) row = 0;
         this.renderItem(item, row);
     }
+
+    //Draw line data
+    var material = new THREE.LineBasicMaterial({ color : 0xffff00 });
+    for(var i=0; i<this.avgLineData.length; ++i) {
+        var numPoints = this.avgLineData[i].length;
+        var positions = new Float32Array( numPoints * 3 );
+        for (var x = 0; x < numPoints; ++x) {
+            var dataPoint = this.avgLineData[i];
+            positions[ x * 3 ] = (i*-8) + 2;
+            positions[ x * 3 + 1 ] = dataPoint[x];
+            positions[ x * 3 + 2 ] = x*5;
+        }
+        var geometry = new THREE.BufferGeometry();
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+        geometry.computeBoundingSphere();
+        var lineMesh = new THREE.Line( geometry, material );
+        this.scene.add(lineMesh);
+    }
 };
 
 ClimateApp.prototype.renderItem = function(item, row) {
@@ -282,8 +311,19 @@ ClimateApp.prototype.renderItem = function(item, row) {
     bar.position.x = (row * -8) + 2;
     bar.position.y = item['Min'] < 0 ? -bar.scale.y : bar.scale.y;
     bar.position.z = (item['Year'] - this.startYear) * 5;
-
     this.monthMinGroups[row].add(bar);
+
+    //Averages
+    this.monthMinGroups[row].bars++;
+    this.monthMinGroups[row].total += item['Min'];
+    this.monthMinGroups[row].avg = this.monthMinGroups[row].total / this.monthMinGroups[row].bars;
+    this.avgLineData[row].push(this.monthMinGroups[row].avg);
+
+    var avg = new THREE.Mesh(this.avgGeom, this.avgMaterial);
+    avg.position.x =  bar.position.x;
+    avg.position.y = this.monthMinGroups[row].avg;
+    avg.position.z = bar.position.z;
+    //this.monthMinGroups[row].add(avg);
 
     bar = new THREE.Mesh(this.barGeom, this.maxMaterial);
     bar.name = rowToMonth(row) + 'Max' + item['Year'];
