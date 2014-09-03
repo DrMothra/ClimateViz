@@ -44,7 +44,7 @@ function addGroundPlane(scene, width, height) {
 function showGroup(group, show) {
     if(group) {
         group.traverse(function(obj) {
-            if(obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
+            if(obj instanceof THREE.Mesh) {
                 obj.visible = show;
             }
         });
@@ -177,9 +177,9 @@ ClimateApp.prototype.createScene = function() {
     addGroundPlane(this.scene, this.GROUND_WIDTH, this.GROUND_DEPTH);
 
     this.minGroup = new THREE.Object3D();
-    this.minGroup.name = 'minGroup';
+    this.minGroup.name = 'MinGroup';
     this.maxGroup = new THREE.Object3D();
-    this.maxGroup.name = 'maxGroup';
+    this.maxGroup.name = 'MaxGroup';
     this.scene.add(this.minGroup);
     this.scene.add(this.maxGroup);
 
@@ -273,10 +273,10 @@ ClimateApp.prototype.createGUI = function() {
     this.guiData = gui.addFolder("Data");
 
     this.guiData.add(this.guiControls, 'ShowMax').onChange(function(value) {
-        _this.onShowGroup('max', value);
+        _this.onShowGroup('Max', value);
     });
     this.guiData.add(this.guiControls, 'ShowMin').onChange(function(value) {
-        _this.onShowGroup('min', value);
+        _this.onShowGroup('Min', value);
     });
 
     //Months
@@ -302,7 +302,7 @@ ClimateApp.prototype.onMaxColourChanged = function(value) {
     //Alter colour for points values
     if(this.guiControls.ShowMax) {
         //Get points group
-        var group = this.scene.getObjectByName('maxGroup');
+        var group = this.scene.getObjectByName('MaxGroup');
         if(group) {
             group.traverse(function(obj) {
                 if(obj instanceof THREE.Mesh) {
@@ -317,7 +317,7 @@ ClimateApp.prototype.onMinColourChanged = function(value) {
     //Alter colour for points values
     if(this.guiControls.ShowMin) {
         //Get points group
-        var group = this.scene.getObjectByName('minGroup');
+        var group = this.scene.getObjectByName('MinGroup');
         if(group) {
             group.traverse(function(obj) {
                 if(obj instanceof THREE.Mesh) {
@@ -437,33 +437,36 @@ ClimateApp.prototype.renderItem = function(item, row) {
     this.monthMaxGroups[row].avg = this.monthMaxGroups[row].total / this.monthMaxGroups[row].bars;
     this.avgMaxLineData[row].push(this.monthMaxGroups[row].avg);
 
+    //DEBUG
+    /*
     if(row == 0) {
         console.log('Data =', item['Max']);
         console.log('Total =', this.monthMaxGroups[row].total);
         console.log('Avg (',this.monthMaxGroups[row].bars,') =', this.monthMaxGroups[row].avg);
     }
+    */
 };
 
 ClimateApp.prototype.onShowGroup = function(attribute, value) {
-    //Show relevant dataset
-    var group = this.scene.getObjectByName(attribute+'Group');
+    //Toggle max/min values
     var _this = this;
-    if(group) {
-        group.traverse(function(obj) {
-            if(obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
-                var month = obj.name.substr(0, obj.name.length-7);
-                if(_this.guiControls[month]){
-                    obj.visible = value;
-                    //Averages
-                    _this.showAverage(month+attribute, value);
-                }
+    for(var i=0; i<months.length; ++i) {
+        if(this.guiControls[months[i]]) {
+            var group = this.scene.getObjectByName(months[i]+attribute, true);
+            if(group) {
+                group.traverse(function(obj) {
+                    if(obj instanceof THREE.Mesh || (obj instanceof THREE.Line && _this.guiControls.ShowAverages)) {
+                        obj.visible = value;
+                    }
+                });
             }
-        });
+        }
     }
 };
 
 ClimateApp.prototype.onShowMonth = function(attribute, value) {
     //Show relevant month or months
+
     var displayMonths = [];
 
     if(attribute == 'All') {
@@ -480,11 +483,13 @@ ClimateApp.prototype.onShowMonth = function(attribute, value) {
         if(this.guiControls.ShowMax) {
             var group = this.scene.getObjectByName(displayMonths[i]+'Max', true);
             showGroup(group, value);
+            this.showAverage(displayMonths[i]+'Max', value);
         }
 
         if(this.guiControls.ShowMin) {
             group = this.scene.getObjectByName(displayMonths[i]+'Min', true);
             showGroup(group, value);
+            this.showAverage(displayMonths[i]+'Min', value);
         }
     }
 };
@@ -492,21 +497,30 @@ ClimateApp.prototype.onShowMonth = function(attribute, value) {
 ClimateApp.prototype.onShowAverages = function(value) {
     //Toggle averages
     for(var i=0; i<months.length; ++i) {
-        var avgGroup = this.scene.getObjectByName(months[i]+'MinAvg', true);
-        if(avgGroup){
-            showGroup(avgGroup, value);
-        }
-        avgGroup  = this.scene.getObjectByName(months[i]+'MaxAvg', true);
-        if(avgGroup){
-            showGroup(avgGroup, value);
+        if(this.guiControls[months[i]]) {
+            if(this.guiControls.ShowMin) {
+                var avg = this.scene.getObjectByName(months[i] + 'MinAvg', true);
+                if (avg) {
+                    avg.visible = value;
+                }
+            }
+            if(this.guiControls.ShowMax) {
+                avg = this.scene.getObjectByName(months[i] + 'MaxAvg', true);
+                if (avg) {
+                    avg.visible = value;
+                }
+            }
         }
     }
 };
 
 ClimateApp.prototype.showAverage = function(month, value) {
-    var avg = this.scene.getObjectByName(month+'Avg', true);
-    if(avg) {
-        avg.visible = value;
+
+    if(this.guiControls.ShowAverages) {
+        var avg = this.scene.getObjectByName(month+'Avg', true);
+        if(avg) {
+            avg.visible = value;
+        }
     }
 };
 
@@ -560,6 +574,11 @@ ClimateApp.prototype.onSelectFile = function(evt) {
     }
     else
         alert('sorry, file apis not supported');
+};
+
+ClimateApp.prototype.preLoad = function(file) {
+    this.filename = file;
+    this.parseFile();
 };
 
 ClimateApp.prototype.onKeyDown = function(event) {
