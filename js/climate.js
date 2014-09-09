@@ -168,6 +168,25 @@ ClimateApp.prototype.update = function() {
 };
 
 ClimateApp.prototype.createScene = function() {
+    //DEBUG
+    var _this = this;
+    this.xmlHttp = new XMLHttpRequest();
+    this.xmlHttp.onreadystatechange = function() {
+            if ( _this.xmlHttp.readyState == 4 && _this.xmlHttp.status == 200 )
+            {
+                if ( _this.xmlHttp.responseText == "Not found" )
+                {
+                    console.log('Not found');
+                }
+                else
+                {
+                    console.log('response =', _this.xmlHttp.responseText);
+                }
+            }
+        };
+
+    this.xmlHttp.open( "GET", 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/metadata/wp_ekx42t_1_ts_CO2_11?pubkey=c21fa479e5&now=1354787337', true );
+    this.xmlHttp.send( null );
     //Init base createsScene
     BaseApp.prototype.createScene.call(this);
 
@@ -221,6 +240,10 @@ ClimateApp.prototype.createScene = function() {
     }
     this.lineGeometry = new THREE.BufferGeometry();
     this.lineMaterial = new THREE.LineBasicMaterial({ color : 0xffff00 });
+};
+
+ClimateApp.prototype.ProcessRequest = function() {
+
 };
 
 ClimateApp.prototype.createGUI = function() {
