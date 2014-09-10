@@ -169,6 +169,7 @@ ClimateApp.prototype.update = function() {
 
 ClimateApp.prototype.createScene = function() {
     //DEBUG
+
     var _this = this;
     this.xmlHttp = new XMLHttpRequest();
     this.xmlHttp.onreadystatechange = function() {
@@ -184,9 +185,20 @@ ClimateApp.prototype.createScene = function() {
                 }
             }
         };
+    this.xmlHttp.open( "GET", 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/measurement_container/wp_ekx42t_1_ts_temperature_4?pubkey=c9bcd7f338&now=1354787337&action=latest', true );
+    //this.xmlHttp.open( "GET", 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/timestream/id/9?last=1354787337&limit=1', true );
 
-    this.xmlHttp.open( "GET", 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/metadata/wp_ekx42t_1_ts_CO2_11?pubkey=c21fa479e5&now=1354787337', true );
     this.xmlHttp.send( null );
+
+
+    //Timestreams api
+    /*
+    var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
+    var streamId = 9;
+    var pollRate = 2000;
+    var timeStream = new TimestreamAPI(remoteURL, streamId, pollRate, 1, this.streamCB, this.metaCB);
+    */
+
     //Init base createsScene
     BaseApp.prototype.createScene.call(this);
 
