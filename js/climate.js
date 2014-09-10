@@ -124,6 +124,27 @@ ClimateApp.prototype.init = function(container) {
     //Time data
     this.startYear = 0;
     this.endYear = 0;
+
+    //Timestreams
+    this.remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
+    this.measure = 'measurement_container/wp_ekx42t_1_ts_temperature_4';
+    this.publicKey = 'c9bcd7f338';
+
+    var _this = this;
+    this.xmlHttp = new XMLHttpRequest();
+    this.xmlHttp.onreadystatechange = function() {
+        if ( _this.xmlHttp.readyState == 4 && _this.xmlHttp.status == 200 )
+        {
+            if ( _this.xmlHttp.responseText == "Not found" )
+            {
+                console.log('Not found');
+            }
+            else
+            {
+                console.log('response =', _this.xmlHttp.responseText);
+            }
+        }
+    };
 };
 
 ClimateApp.prototype.update = function() {
@@ -168,29 +189,7 @@ ClimateApp.prototype.update = function() {
 };
 
 ClimateApp.prototype.createScene = function() {
-    //DEBUG
-
     var _this = this;
-    this.xmlHttp = new XMLHttpRequest();
-    this.xmlHttp.onreadystatechange = function() {
-            if ( _this.xmlHttp.readyState == 4 && _this.xmlHttp.status == 200 )
-            {
-                if ( _this.xmlHttp.responseText == "Not found" )
-                {
-                    console.log('Not found');
-                }
-                else
-                {
-                    console.log('response =', _this.xmlHttp.responseText);
-                }
-            }
-        };
-    this.xmlHttp.open( "GET", 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/measurement_container/wp_ekx42t_1_ts_temperature_4?pubkey=c9bcd7f338&now=1354787337&action=latest', true );
-    //this.xmlHttp.open( "GET", 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/timestream/id/9?last=1354787337&limit=1', true );
-
-    this.xmlHttp.send( null );
-
-
     //Timestreams api
     /*
     var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
@@ -616,6 +615,22 @@ ClimateApp.prototype.preLoad = function(file) {
     this.parseFile();
 };
 
+ClimateApp.prototype.onGetData = function() {
+    //Get timestream data
+    var date = parseInt($('#dob').val());
+    console.log('DOB =', date);
+
+    var timeStamp = parseInt($('#timeStamp').val());
+    console.log('Time =', timeStamp);
+
+    //Construct http request
+    timeStamp = 0;
+    var cmd = this.remoteURL + this.measure + '?pubkey=' + this.publicKey + '&now=' + timeStamp + '&action=latest';
+    this.xmlHttp.open( "GET", cmd, true );
+
+    this.xmlHttp.send( null );
+};
+
 ClimateApp.prototype.onKeyDown = function(event) {
     //Do any base app key handling
     BaseApp.prototype.keydown.call(this, event);
@@ -639,6 +654,10 @@ $(document).ready(function() {
     //GUI callbacks
     $("#chooseFile").on("change", function(evt) {
         app.onSelectFile(evt);
+    });
+
+    $("#getData").on('click', function(evt) {
+        app.onGetData();
     });
 
     $(document).keydown(function (event) {

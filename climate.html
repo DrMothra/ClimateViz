@@ -13,7 +13,6 @@
     <script type="text/javascript" src="js/FileSaver.js"></script>
     <script type="text/javascript" src="js/baseApp.js"></script>
     <script type="text/javascript" src="js/stats.js"></script>
-    <script type="text/javascript" src="js/timestreams-api.js"></script>
     <script type="text/javascript" src="js/climate.js"></script>
 
     <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
@@ -33,6 +32,15 @@
 <div id="loadButton" class="mainButton">
     <span>Upload</span>
     <input id="chooseFile" type="file" class="upload">
+</div>
+<div class="userInput">
+    <form action="">
+        <label for="dob">Year of Birth</label><br>
+        <input id="dob" type="number" min="1914" max="2014" required="true"/><br>
+        <label for="timeStamp">Enter code</label><br>
+        <input id="timeStamp" type="text" required="true"><br>
+        <input type="button" id="getData" value="Get Data">
+    </form>
 </div>
 </body>
 </html>

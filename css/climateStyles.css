@@ -34,3 +34,15 @@ body {
     opacity: 0;
     background-color: #004040;
 }
+.userInput {
+    position: absolute;
+    width: 20%;
+    top: 10%;
+    left: 2%;
+}
+
+#dob,
+#timeStamp {
+    text-align: right;
+    font-size: 1em;
+}
