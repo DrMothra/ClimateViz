@@ -130,6 +130,8 @@ ClimateApp.prototype.init = function(container) {
     this.measure = 'measurement_container/wp_ekx42t_1_ts_temperature_4';
     this.publicKey = 'c9bcd7f338';
 
+    //Parameters
+    this.timeOffset = 60 * 30;
     var _this = this;
     this.xmlHttp = new XMLHttpRequest();
     this.xmlHttp.onreadystatechange = function() {
@@ -620,12 +622,19 @@ ClimateApp.prototype.onGetData = function() {
     var date = parseInt($('#dob').val());
     console.log('DOB =', date);
 
-    var timeStamp = parseInt($('#timeStamp').val());
-    console.log('Time =', timeStamp);
+    var min = parseInt($('#timeStamp').val());
+    console.log('Time =', min);
 
     //Construct http request
-    timeStamp = 0;
-    var cmd = this.remoteURL + this.measure + '?pubkey=' + this.publicKey + '&now=' + timeStamp + '&action=latest';
+    //var min = timeStamp - this.timeOffset;
+    //var max = timeStamp + this.timeOffset;
+    var timeStamp = Math.round(Date.now() / 1000);
+    timeStamp -= (8*60*60);
+    var limit = 10;
+    var cmd = this.remoteURL + this.measure + '?pubkey=' + this.publicKey + '&now=' + timeStamp + '&min='+min;
+    //DEBUG
+    console.log('Cmd =', cmd);
+
     this.xmlHttp.open( "GET", cmd, true );
 
     this.xmlHttp.send( null );
