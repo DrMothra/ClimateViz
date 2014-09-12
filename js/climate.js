@@ -192,13 +192,6 @@ ClimateApp.prototype.update = function() {
 
 ClimateApp.prototype.createScene = function() {
     var _this = this;
-    //Timestreams api
-    /*
-    var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
-    var streamId = 9;
-    var pollRate = 2000;
-    var timeStream = new TimestreamAPI(remoteURL, streamId, pollRate, 1, this.streamCB, this.metaCB);
-    */
 
     //Init base createsScene
     BaseApp.prototype.createScene.call(this);
@@ -206,7 +199,7 @@ ClimateApp.prototype.createScene = function() {
     //Create ground
     this.GROUND_DEPTH = 480;
     this.GROUND_WIDTH = 180;
-    addGroundPlane(this.scene, this.GROUND_WIDTH, this.GROUND_DEPTH);
+    //addGroundPlane(this.scene, this.GROUND_WIDTH, this.GROUND_DEPTH);
 
     this.minGroup = new THREE.Object3D();
     this.minGroup.name = 'MinGroup';
@@ -251,8 +244,59 @@ ClimateApp.prototype.createScene = function() {
         this.avgMinLineData.push(new Array());
         this.avgMaxLineData.push(new Array());
     }
-    this.lineGeometry = new THREE.BufferGeometry();
-    this.lineMaterial = new THREE.LineBasicMaterial({ color : 0xffff00 });
+    var pointsMain = [];
+    pointsMain.push(new THREE.Vector3(-50, 0, 0));
+    pointsMain.push(new THREE.Vector3(-25, 3, 0));
+    pointsMain.push(new THREE.Vector3(0, 0, 0));
+    pointsMain.push(new THREE.Vector3(25, -1.5, 0));
+    pointsMain.push(new THREE.Vector3(50, 0, 0));
+
+    var pointsMin = [];
+    pointsMin.push(new THREE.Vector3(0, 0, 0));
+    pointsMin.push(new THREE.Vector3(-0.3, -2.5, 0));
+    pointsMin.push(new THREE.Vector3(0, -5, 0));
+    pointsMin.push(new THREE.Vector3(0.4, -7.5, 0));
+    pointsMin.push(new THREE.Vector3(0, -10, 0));
+
+    var pointsMax = [];
+    pointsMax.push(new THREE.Vector3(0, 0, 0));
+    pointsMax.push(new THREE.Vector3(-1, -3.75, 0));
+    pointsMax.push(new THREE.Vector3(0.25, -7.5, 0));
+    pointsMax.push(new THREE.Vector3(0.3, -11.25, 0));
+    pointsMax.push(new THREE.Vector3(1, -15, 0));
+    pointsMax.push(new THREE.Vector3(0.2, -18.75, 0));
+    pointsMax.push(new THREE.Vector3(0, -22.5, 0));
+    pointsMax.push(new THREE.Vector3(-0.1, -26.25, 0));
+    pointsMax.push(new THREE.Vector3(0, -30, 0));
+
+    var radius = 3;
+
+    var lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMain), 12, radius, 6, false);
+    var lineMaterial = new THREE.MeshLambertMaterial( {color : 0xFFE839});
+    var lineMesh = new THREE.Mesh(lineGeometry, lineMaterial);
+    lineMesh.position.y = 60;
+    lineMesh.scale.x = 6;
+    this.scene.add(lineMesh);
+
+    var xStart = -250;
+    var yStart = 60;
+    var gap = 10;
+    var xGap = 50;
+    for(var i=0; i<11; ++i) {
+        lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMin), 12, radius, 6, false);
+        lineMaterial = new THREE.MeshLambertMaterial( {color : 0x0000ff});
+        lineMesh = new THREE.Mesh(lineGeometry, lineMaterial);
+        lineMesh.position.x = xStart + (i*xGap);
+        lineMesh.position.y = yStart;
+        this.scene.add(lineMesh);
+
+        lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMax), 12, radius, 6, false);
+        lineMaterial = new THREE.MeshLambertMaterial( {color : 0x770000});
+        lineMesh = new THREE.Mesh(lineGeometry, lineMaterial);
+        lineMesh.position.x = xStart + gap + (i*xGap);
+        lineMesh.position.y = yStart;
+        this.scene.add(lineMesh);
+    }
 };
 
 ClimateApp.prototype.ProcessRequest = function() {
@@ -629,9 +673,10 @@ ClimateApp.prototype.onGetData = function() {
     //var min = timeStamp - this.timeOffset;
     //var max = timeStamp + this.timeOffset;
     var timeStamp = Math.round(Date.now() / 1000);
-    timeStamp -= (8*60*60);
+    //timeStamp -= (8*60*60);
     var limit = 10;
-    var cmd = this.remoteURL + this.measure + '?pubkey=' + this.publicKey + '&now=' + timeStamp + '&min='+min;
+    var max = min + (16*60);
+    var cmd = this.remoteURL + this.measure + '?pubkey=' + this.publicKey + '&now=' + timeStamp + '&min='+min + '&max='+max;
     //DEBUG
     console.log('Cmd =', cmd);
 

@@ -5,6 +5,12 @@ body {
     margin: 0;
     overflow: hidden;
 }
+.centred {
+    text-align: center;
+}
+.fullWidth {
+    width: 100%;
+}
 .version {
     position: absolute;
     top: 10px;
@@ -41,6 +47,22 @@ body {
     left: 2%;
 }
 
+.weather img {
+    max-height: 70%;
+    max-width: 256px;
+}
+#weatherViz {
+    background-color: #f7ae59;
+}
+.weatherInfo {
+    font-size: 1.5em;
+}
+.header {
+    margin-top: 2%;
+    margin-bottom: 2%;
+    font-size: 2em;
+    text-align: center;
+}
 #dob,
 #timeStamp {
     text-align: right;
