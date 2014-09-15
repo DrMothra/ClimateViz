@@ -149,6 +149,7 @@ ClimateApp.prototype.init = function(container) {
     };
     this.lineGeom = null;
     this.totalDelta = 0;
+    this.animationTime = 0.01;
 };
 
 ClimateApp.prototype.update = function() {
@@ -190,28 +191,22 @@ ClimateApp.prototype.update = function() {
     }
     */
     //Animate geometry
-    /*
+
+
     this.totalDelta += this.clock.getDelta();
-    if(this.totalDelta >= 1) {
+    if(this.totalDelta >= this.animationTime) {
         //Adjust indices
-        if(this.lineGeom) {
-            if(this.lastIndexPos < this.indices.length-6) {
-                var lastValue = this.indices[this.lastIndexPos];
-                this.indices[++this.lastIndexPos] = lastValue+2;
-                this.indices[++this.lastIndexPos] = lastValue+1;
-                this.indices[++this.lastIndexPos] = lastValue+3;
-                this.indices[++this.lastIndexPos] = lastValue+3;
-                this.indices[++this.lastIndexPos] = lastValue+4;
-                this.indices[++this.lastIndexPos] = lastValue+2;
-                this.lineGeom.verticesNeedUpdate = true;
-                this.lineGeom.elementsNeedUpdate = true;
-                this.lineGeom.normalsNeedUpdate = true;
-                this.lineGeom.computeBoundingSphere();
-                this.totalDelta = 0;
-            }
+        this.lastIndexPos += 6;
+        if(this.lastIndexPos <= this.indexLength) {
+            this.lineGeom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
+            this.totalDelta = 0;
         }
+        this.nextAnimation = true;
     }
-    */
+
+    if(this.nextAnimation) {
+
+    }
 
     BaseApp.prototype.update.call(this);
 };
@@ -270,104 +265,69 @@ ClimateApp.prototype.createScene = function() {
         this.avgMinLineData.push(new Array());
         this.avgMaxLineData.push(new Array());
     }
-    var pointsMain = [];
-    pointsMain.push(new THREE.Vector3(-50, 0, 0));
-    pointsMain.push(new THREE.Vector3(-25, 3, 0));
-    pointsMain.push(new THREE.Vector3(0, 0, 0));
-    pointsMain.push(new THREE.Vector3(25, -1.5, 0));
-    pointsMain.push(new THREE.Vector3(50, 0, 0));
-
-    var pointsMin = [];
-    pointsMin.push(new THREE.Vector3(0, 0, 0));
-    pointsMin.push(new THREE.Vector3(-0.3, -2.5, 0));
-    pointsMin.push(new THREE.Vector3(0, -5, 0));
-    pointsMin.push(new THREE.Vector3(0.4, -7.5, 0));
-    pointsMin.push(new THREE.Vector3(0, -10, 0));
-
-    var pointsMax = [];
-    pointsMax.push(new THREE.Vector3(0, 0, 0));
-    pointsMax.push(new THREE.Vector3(-1, -3.75, 0));
-    pointsMax.push(new THREE.Vector3(0.25, -7.5, 0));
-    pointsMax.push(new THREE.Vector3(0.3, -11.25, 0));
-    pointsMax.push(new THREE.Vector3(1, -15, 0));
-    pointsMax.push(new THREE.Vector3(0.2, -18.75, 0));
-    pointsMax.push(new THREE.Vector3(0, -22.5, 0));
-    pointsMax.push(new THREE.Vector3(-0.1, -26.25, 0));
-    pointsMax.push(new THREE.Vector3(0, -30, 0));
-
-    /*
-    var radius = 3;
-
-    var lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMain), 12, radius, 6, false);
-    var lineMaterial = new THREE.MeshLambertMaterial( {color : 0xFFE839});
-    var lineMesh = new THREE.Mesh(lineGeometry, lineMaterial);
-    lineMesh.position.y = 60;
-    lineMesh.scale.x = 6;
-    this.scene.add(lineMesh);
-
-    var xStart = -250;
-    var yStart = 60;
-    var gap = 10;
-    var xGap = 50;
-    for(var i=0; i<11; ++i) {
-        lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMin), 12, radius, 6, false);
-        lineMaterial = new THREE.MeshLambertMaterial( {color : 0x0000ff});
-        lineMesh = new THREE.Mesh(lineGeometry, lineMaterial);
-        lineMesh.position.x = xStart + (i*xGap);
-        lineMesh.position.y = yStart;
-        this.scene.add(lineMesh);
-
-        lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMax), 12, radius, 6, false);
-        lineMaterial = new THREE.MeshLambertMaterial( {color : 0x770000});
-        lineMesh = new THREE.Mesh(lineGeometry, lineMaterial);
-        lineMesh.position.x = xStart + gap + (i*xGap);
-        lineMesh.position.y = yStart;
-        this.scene.add(lineMesh);
-    }
-    */
 
     var vertices = [];
-    vertices.push(0, 0, 0);
-    vertices.push(0, 10, 0);
-    vertices.push(10, -1, 0);
-    vertices.push(10, 9, 0);
-    vertices.push(20, -3, 0);
-    vertices.push(20, 7, 0);
-    vertices.push(30, -3, 0);
-    vertices.push(30, 7, 0);
-    vertices.push(40, 3, 0);
-    vertices.push(40, 13, 0);
-    vertices.push(50, 5, 0);
-    vertices.push(50, 15, 0);
-    vertices.push(60, 2, 0);
-    vertices.push(60, 12, 0);
-    vertices.push(70, -3, 0);
-    vertices.push(70, 7, 0);
-
-
-    //var indices = [1, 0, 2, 2, 3, 1, 3, 2, 4, 4, 5, 3, 5, 4, 6, 6, 7, 5, 7, 6, 8, 8, 9, 7, 9, 8, 10, 10, 11, 9, 11, 10, 12, 12, 13, 11, 13, 12, 14, 14, 15, 13];
-    this.indices = [1, 0, 2, 2, 3, 1];
-
-    for(var i=0; i<36; ++i) {
-        this.indices.push(1);
+    var lineWidth = 5;
+    var xStep = 10;
+    var segments = 100;
+    for(var t= 0, x=0; t<=2*Math.PI; t+=(2*Math.PI/segments), x+=xStep) {
+        var y = 3 * Math.sin(t);
+        vertices.push(x, y, 0);
+        vertices.push(x, y+lineWidth, 0);
     }
 
-    this.lastIndexPos = 5;
+    var indices = [];
+    for(var i= 0, ind=0; i<segments; ++i, ind+=2) {
+        indices.push(ind+1, ind, ind+2);
+        indices.push(ind+2, ind+3, ind+1);
+    }
+
+    this.indexLength = indices.length;
+    this.lastIndexPos = 0;
     this.lineGeom = new THREE.BufferGeometry();
     this.lineGeom.dynamic = true;
-    this.lineGeom.offsets = [ { start: 0, count: 3, index: 0 } ];
+    this.lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
+    var lineMat = new THREE.MeshBasicMaterial( {color : 0xffd54e});
+
+    this.lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
+    this.lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+    this.lineGeom.computeBoundingSphere();
+
+    this.lineMesh = new THREE.Mesh(this.lineGeom, lineMat);
+    var lineGroup = new THREE.Object3D();
+    lineGroup.add(this.lineMesh);
+    lineGroup.position.x = -500;
+    lineGroup.position.y = 170;
+    lineGroup.position.z = -400;
+    this.scene.add(lineGroup);
+
+    segments = 10;
+    vertices.length = 0;
+    for(var t= 0, x=0; t<=2*Math.PI; t+=(2*Math.PI/segments), x+=xStep) {
+        var y = 3 * Math.cos(t);
+        vertices.push(x, y, 0);
+        vertices.push(x, y+lineWidth, 0);
+    }
+    indices.length = 0;
+    for(var i= 0, ind=0; i<segments; ++i, ind+=2) {
+        indices.push(ind+1, ind, ind+2);
+        indices.push(ind+2, ind+3, ind+1);
+    }
+    this.line2Geom = new THREE.BufferGeometry();
+    this.line2Geom.dynamic = true;
+    this.line2Geom.offsets = [ { start: 0, count: 0, index: 0 } ];
     var lineMat = new THREE.MeshBasicMaterial( {color : 0x0000ff});
 
-    this.lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( this.indices ), 1 ) );
-    this.lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+    this.line2Geom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
+    this.line2Geom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+    this.line2Geom.computeBoundingSphere();
 
-    this.lineGeom.computeBoundingSphere();
-    this.lineGeom.dynamic = true;
-
-    //var lineMesh = new THREE.Line(lineGeom, lineMat);
-    this.lineMesh = new THREE.Mesh(this.lineGeom, lineMat);
-    this.scene.add(this.lineMesh);
-
+    this.line2Mesh = new THREE.Mesh(this.line2Geom, lineMat);
+    this.line2Mesh.rotation.z = Math.PI/2;
+    this.line2Mesh.position.x = -400;
+    this.line2Mesh.position.y = 70;
+    this.line2Mesh.position.z = -400;
+    this.scene.add(this.line2Mesh);
 };
 
 ClimateApp.prototype.ProcessRequest = function() {
