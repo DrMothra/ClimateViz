@@ -147,6 +147,8 @@ ClimateApp.prototype.init = function(container) {
             }
         }
     };
+    this.lineGeom = null;
+    this.totalDelta = 0;
 };
 
 ClimateApp.prototype.update = function() {
@@ -187,6 +189,30 @@ ClimateApp.prototype.update = function() {
         }
     }
     */
+    //Animate geometry
+    /*
+    this.totalDelta += this.clock.getDelta();
+    if(this.totalDelta >= 1) {
+        //Adjust indices
+        if(this.lineGeom) {
+            if(this.lastIndexPos < this.indices.length-6) {
+                var lastValue = this.indices[this.lastIndexPos];
+                this.indices[++this.lastIndexPos] = lastValue+2;
+                this.indices[++this.lastIndexPos] = lastValue+1;
+                this.indices[++this.lastIndexPos] = lastValue+3;
+                this.indices[++this.lastIndexPos] = lastValue+3;
+                this.indices[++this.lastIndexPos] = lastValue+4;
+                this.indices[++this.lastIndexPos] = lastValue+2;
+                this.lineGeom.verticesNeedUpdate = true;
+                this.lineGeom.elementsNeedUpdate = true;
+                this.lineGeom.normalsNeedUpdate = true;
+                this.lineGeom.computeBoundingSphere();
+                this.totalDelta = 0;
+            }
+        }
+    }
+    */
+
     BaseApp.prototype.update.call(this);
 };
 
@@ -269,6 +295,7 @@ ClimateApp.prototype.createScene = function() {
     pointsMax.push(new THREE.Vector3(-0.1, -26.25, 0));
     pointsMax.push(new THREE.Vector3(0, -30, 0));
 
+    /*
     var radius = 3;
 
     var lineGeometry = new THREE.TubeGeometry(new THREE.SplineCurve3(pointsMain), 12, radius, 6, false);
@@ -297,6 +324,50 @@ ClimateApp.prototype.createScene = function() {
         lineMesh.position.y = yStart;
         this.scene.add(lineMesh);
     }
+    */
+
+    var vertices = [];
+    vertices.push(0, 0, 0);
+    vertices.push(0, 10, 0);
+    vertices.push(10, -1, 0);
+    vertices.push(10, 9, 0);
+    vertices.push(20, -3, 0);
+    vertices.push(20, 7, 0);
+    vertices.push(30, -3, 0);
+    vertices.push(30, 7, 0);
+    vertices.push(40, 3, 0);
+    vertices.push(40, 13, 0);
+    vertices.push(50, 5, 0);
+    vertices.push(50, 15, 0);
+    vertices.push(60, 2, 0);
+    vertices.push(60, 12, 0);
+    vertices.push(70, -3, 0);
+    vertices.push(70, 7, 0);
+
+
+    //var indices = [1, 0, 2, 2, 3, 1, 3, 2, 4, 4, 5, 3, 5, 4, 6, 6, 7, 5, 7, 6, 8, 8, 9, 7, 9, 8, 10, 10, 11, 9, 11, 10, 12, 12, 13, 11, 13, 12, 14, 14, 15, 13];
+    this.indices = [1, 0, 2, 2, 3, 1];
+
+    for(var i=0; i<36; ++i) {
+        this.indices.push(1);
+    }
+
+    this.lastIndexPos = 5;
+    this.lineGeom = new THREE.BufferGeometry();
+    this.lineGeom.dynamic = true;
+    this.lineGeom.offsets = [ { start: 0, count: 3, index: 0 } ];
+    var lineMat = new THREE.MeshBasicMaterial( {color : 0x0000ff});
+
+    this.lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( this.indices ), 1 ) );
+    this.lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+
+    this.lineGeom.computeBoundingSphere();
+    this.lineGeom.dynamic = true;
+
+    //var lineMesh = new THREE.Line(lineGeom, lineMat);
+    this.lineMesh = new THREE.Mesh(this.lineGeom, lineMat);
+    this.scene.add(this.lineMesh);
+
 };
 
 ClimateApp.prototype.ProcessRequest = function() {
