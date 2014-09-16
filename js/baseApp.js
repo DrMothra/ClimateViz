@@ -37,8 +37,8 @@ BaseApp.prototype.init = function(container) {
 };
 
 BaseApp.prototype.createRenderer = function() {
-    this.renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
-    this.renderer.setClearColor(0x5c5f64, 1.0);
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setClearColor(0xf4eede, 1.0);
     this.renderer.shadowMapEnabled = true;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.container.appendChild( this.renderer.domElement );
@@ -152,7 +152,7 @@ BaseApp.prototype.run = function(timestamp) {
     this.renderer.render( this.scene, this.camera );
     var self = this;
     this.update();
-    this.stats.update();
+    if(this.stats) this.stats.update();
     requestAnimationFrame(function(timestamp) { self.run(timestamp); });
 };
 

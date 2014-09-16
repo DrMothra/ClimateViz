@@ -52,7 +52,7 @@ body {
     max-width: 256px;
 }
 #weatherViz {
-    background-color: #f7ae59;
+    background-color: #f4eede;
 }
 .weatherInfo {
     font-size: 1.5em;
@@ -62,6 +62,11 @@ body {
     margin-bottom: 2%;
     font-size: 2em;
     text-align: center;
+}
+.dataInput {
+    margin-left: 20%;
+    margin-right: 20%;
+    margin-top: 10px;
 }
 #dob,
 #timeStamp {
