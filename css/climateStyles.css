@@ -68,6 +68,10 @@ body {
     margin-right: 20%;
     margin-top: 10px;
 }
+.errorMsg {
+    text-align: center;
+    color: #ff2823;
+}
 #dob,
 #timeStamp {
     text-align: right;

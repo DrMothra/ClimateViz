@@ -4,42 +4,59 @@
 
 var date = null;
 var code = null;
+var validData = false;
 
 function onGetData() {
-    //Get timestream data
+    //Validate data
     date = parseInt($('#dob').val());
-    console.log('DOB =', date);
+    //DEBUG
+    //console.log('DOB =', date);
+
+    if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
+
+    //Adjust these to October - set to September for testing
+    var lower = Math.round(new Date(2014, 8, 1, 0, 0, 0).getTime()/1000);
+    var upper = Math.round(new Date(2014, 9, 31, 23, 59, 59).getTime()/1000);
+    //DEBUG
+    //console.log('Limits =', upper, lower);
 
     code = parseInt($('#timeStamp').val());
-    console.log('Time =', code);
-
-    //Construct http request
-    //var min = timeStamp - this.timeOffset;
-    //var max = timeStamp + this.timeOffset;
-    var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
-    var measure = 'measurement_container/wp_ekx42t_1_ts_temperature_4';
-    var publicKey = 'c9bcd7f338';
-    var timeStamp = Math.round(Date.now() / 1000);
-    //timeStamp -= (8*60*60);
-    var limit = 10;
-    var max = code + (16*60);
-    var cmd = remoteURL + measure + '?pubkey=' + publicKey + '&now=' + timeStamp + '&min='+code + '&max='+max;
     //DEBUG
-    console.log('Cmd =', cmd);
+    //console.log('Time =', code);
 
-    //this.xmlHttp.open( "GET", cmd, true );
+    if(isNaN(code) || code < lower || code > upper) return 'badCode';
 
-    //this.xmlHttp.send( null );
+    validData = true;
 }
 
-
+function displayError(msg) {
+    //Display error message
+    var output = $('#msgOutput');
+    if(output) {
+        output.html(msg);
+    }
+}
 
 $(document).ready(function() {
 
     $("#getData").on('click', function(evt) {
-        onGetData();
-        window.open('pictures.html?dob='+date+'&code='+code, '_self');
+        var status = onGetData();
+        if(validData) {
+            window.open('pictures.html?dob='+date+'&code='+code, '_self');
+        } else {
+            switch (status) {
+                case 'badDate':
+                    displayError('Enter a correct birth year');
+                    break;
+
+                case 'badCode':
+                    displayError('Enter a valid prediction code');
+                    break;
+
+                default :
+                    displayError('Incorrect numbers - try again');
+            }
+        }
     });
 
-    console.log('Date =', date);
 });
