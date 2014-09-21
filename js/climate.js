@@ -468,7 +468,7 @@ ClimateApp.prototype.createScene = function() {
         lineGeom = new THREE.BufferGeometry();
         lineGeom.dynamic = true;
         lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-        lineMat = new THREE.MeshBasicMaterial( {color : colours[i]} );
+        lineMat = new THREE.MeshLambertMaterial( {color : colours[i]} );
 
         lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
         lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
