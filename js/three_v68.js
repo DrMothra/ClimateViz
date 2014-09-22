@@ -13973,8 +13973,7 @@ THREE.ShaderMaterial = function ( parameters ) {
 	this.defaultAttributeValues = {
 		'color': [ 1, 1, 1 ],
 		'uv': [ 0, 0 ],
-		'uv2': [ 0, 0 ],
-        'normal': [0, 1, 0]
+		'uv2': [ 0, 0 ]
 	};
 
 	this.index0AttributeName = undefined;

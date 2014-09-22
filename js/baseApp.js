@@ -38,7 +38,7 @@ BaseApp.prototype.init = function(container) {
 
 BaseApp.prototype.createRenderer = function() {
     this.renderer = new THREE.WebGLRenderer( {antialias : true});
-    this.renderer.setClearColor(0xA49E8E, 1.0);
+    this.renderer.setClearColor(0xcdcdcd, 1.0);
     this.renderer.shadowMapEnabled = true;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.container.appendChild( this.renderer.domElement );
@@ -112,9 +112,16 @@ BaseApp.prototype.createScene = function() {
     this.scene.add(spotLight);
     */
 
+
     var directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
-    directionalLight.position.set( 1, 0, 1 );
+    directionalLight.position.set( 0, 0, 1 );
     this.scene.add( directionalLight );
+
+    /*
+    var pointLight = new THREE.PointLight(0xffffff);
+    pointLight.position.set(0,0,-200);
+    this.scene.add(pointLight);
+    */
 };
 
 BaseApp.prototype.createCamera = function() {

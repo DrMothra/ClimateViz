@@ -263,12 +263,14 @@ function createLabel(name, position, scale, colour, fontSize, opacity) {
     return sprite;
 }
 
-function createGeometry(lineWidth, step, segments, vertices, indices) {
+function createGeometry(lineWidth, step, segments, vertices, indices, normals) {
     //Create geometry
     for(var t= 0, x=0; t<=2*Math.PI; t+=(2*Math.PI/segments), x+=step) {
         var y = 3 * Math.sin(t);
         vertices.push(x, y, 0);
         vertices.push(x, y+lineWidth, 0);
+        normals.push(0, 0, 1);
+        normals.push(0 ,0, 1);
     }
 
     for(var i= 0, ind=0; i<segments; ++i, ind+=2) {
@@ -311,6 +313,12 @@ ClimateApp.prototype.init = function(container) {
     this.animating = true;
     this.animationGeoms = [];
     this.currentAnimation = 0;
+    this.glowTime = 0;
+    this.waveDirection = 1;
+
+    //Camera animation
+    this.camAnimLength = 3000;
+    this.camAnimSpeed = 0;
 };
 
 ClimateApp.prototype.update = function() {
@@ -318,14 +326,28 @@ ClimateApp.prototype.update = function() {
 
 
     //Animate geometry
-    this.totalDelta += this.clock.getDelta();
+    var delta = this.clock.getDelta();
+    var attachedGeom = null;
+    this.totalDelta += delta;
     if(this.totalDelta >= this.animationTime && this.animating) {
         //Adjust indices
+        var camPos = this.camera.position;
+        var camDist = this.camAnimLength * delta * this.camAnimSpeed;
+        var lookAt = this.controls.getLookAt();
+        this.camera.position.set(camPos.x+camDist, camPos.y, camPos.z);
+        this.controls.setLookAt(lookAt.x+camDist, lookAt.y, lookAt.z);
+
         var geom = this.animationGeoms[this.currentAnimation];
+        if(geom.attachedGeom) {
+            attachedGeom = geom.attachedGeom;
+        }
         var length = geom.attributes.index.array.length;
         this.lastIndexPos += 6;
         if(this.lastIndexPos <= length) {
             geom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
+            if(attachedGeom) {
+                attachedGeom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
+            }
             this.totalDelta = 0;
         } else {
             //Show temp label
@@ -338,11 +360,21 @@ ClimateApp.prototype.update = function() {
             }
 
             ++this.currentAnimation;
+            attachedGeom = null;
             if(this.currentAnimation >= this.animationGeoms.length) this.animating = false;
             if(this.currentAnimation >= 1) this.animationTime = 0.1;
             this.lastIndexPos = 0;
         }
     }
+
+    var glow = this.glowTime;
+    if(glow >= 0.7) this.waveDirection = -1;
+    if(glow < 0) this.waveDirection = 1;
+    this.glowMat.uniforms.intensity.value = glow;
+    this.glowTime += (delta * this.waveDirection);
+
+    //DEBUG
+    //console.log('Glow =', glow);
 
     BaseApp.prototype.update.call(this);
 };
@@ -373,6 +405,7 @@ ClimateApp.prototype.createScene = function() {
     var yStart = 175;
     var zStart = -400;
     var positions = [];
+    var normals = [];
     var gap = 10;
     var distance = 40;
     for(var i=0; i<dataItems; ++i) {
@@ -416,13 +449,15 @@ ClimateApp.prototype.createScene = function() {
     var maxThresh = 13.8;
 
     //Draw main line first
-    createGeometry(lineWidth, xStep, 400, vertices, indices);
+    createGeometry(lineWidth, xStep, 400, vertices, indices, normals);
     var lineGeom = new THREE.BufferGeometry();
+    lineGeom.attachedGeom = null;
     lineGeom.dynamic = true;
     lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
     var lineMat = new THREE.MeshBasicMaterial( {color : 0x000000} );
     lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
     lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+    lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
     lineGeom.computeBoundingSphere();
     this.animationGeoms.push(lineGeom);
 
@@ -439,17 +474,13 @@ ClimateApp.prototype.createScene = function() {
     //var glowMat = new THREE.MeshBasicMaterial( {color : 0xffff00});
     //Glow material for temperatures above threshold
     var _this = this;
-    var attributes = {
-
-        size:        { type: 'f', value: null }
-
-    };
-    var glowMat = new THREE.ShaderMaterial(
+    this.glowMat = new THREE.ShaderMaterial(
         {
             uniforms:
             {
                 "c":   { type: "f", value: 1.0 },
                 "p":   { type: "f", value: 0.5 },
+                "intensity": { type: "f", value: 1.0 },
                 glowColor: { type: "c", value: new THREE.Color(0xffff00) },
                 viewVector: { type: "v3", value: _this.camera.position }
             },
@@ -462,27 +493,63 @@ ClimateApp.prototype.createScene = function() {
     );
 
     for(var i= 0, year=this.startYear; i<dataItems; ++i, ++year) {
+
+        var glow = false;
+        if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
+
+        if( glow) {
+            vertices.length = 0;
+            indices.length = 0;
+            normals.length = 0;
+            createGeometry(lineWidth, xStep, segments[i], vertices, indices, normals);
+            var glowGeom = new THREE.BufferGeometry();
+            glowGeom.dynamic = true;
+            glowGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
+            lineMat = this.glowMat;
+
+            glowGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
+            glowGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+            glowGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
+            glowGeom.computeBoundingSphere();
+
+            lineMesh = new THREE.Mesh(glowGeom, lineMat);
+            lineMesh.position.x = positions[i].x - 0.5;
+            lineMesh.position.y = positions[i].y;
+            lineMesh.position.z = positions[i].z;
+            lineMesh.rotation.z = rotations[i];
+            lineMesh.scale.x = scales[i] * scaleFactor * 1.01;
+            lineMesh.scale.y *= 1.25;
+            this.scene.add(lineMesh);
+        }
+
         vertices.length = 0;
         indices.length = 0;
-        createGeometry(lineWidth, xStep, segments[i], vertices, indices);
+        normals.length = 0;
+
+        createGeometry(lineWidth, xStep, segments[i], vertices, indices, normals);
         lineGeom = new THREE.BufferGeometry();
+        lineGeom.attachedGeom = glow ? glowGeom : null;
         lineGeom.dynamic = true;
         lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-        lineMat = new THREE.MeshLambertMaterial( {color : colours[i]} );
+        lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF4E02E : colours[i]} );
 
         lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
         lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
+        lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
         lineGeom.computeBoundingSphere();
         this.animationGeoms.push(lineGeom);
 
         //Glow effect for particular temperatures
-        lineMesh = new THREE.Mesh(lineGeom, scales[i] <= minThresh || scales[i] >= maxThresh ? glowMat : lineMat);
+        lineMesh = new THREE.Mesh(lineGeom, lineMat);
         lineMesh.position.x = positions[i].x;
         lineMesh.position.y = positions[i].y;
         lineMesh.position.z = positions[i].z;
         lineMesh.rotation.z = rotations[i];
         lineMesh.scale.x = scales[i] * scaleFactor;
         this.scene.add(lineMesh);
+
+
+
 
         //Temperature labels
         tempPosition.x = lineMesh.position.x;
