@@ -317,26 +317,57 @@ ClimateApp.prototype.init = function(container) {
     this.waveDirection = 1;
 
     //Camera animation
-    this.camAnimLength = 3000;
-    this.camAnimSpeed = 0;
+    this.camAnimLength = 3375;
+    this.camAnimSpeed = 32;
+    this.camMargin = 10;
+
+    var endPos = new THREE.Vector3(this.camera.position.x+this.camAnimLength, this.camera.position.y, this.camera.position.z);
+    var dirVec = new THREE.Vector3(endPos.x, endPos.y, endPos.z);
+    var pathProps = { waitTime : 36, direction : dirVec.sub(this.camera.position).normalize(), endPos : endPos};
+    this.camPaths = [ pathProps ];
+    endPos = new THREE.Vector3(1510, -170, 2360);
+    dirVec = new THREE.Vector3(endPos.x, endPos.y, endPos.z);
+    var startPos = new THREE.Vector3(3375, 0, 300);
+    pathProps = { waitTime : 5, direction : dirVec.sub(startPos).normalize(), endPos: endPos};
+    this.camPaths.push(pathProps);
+
+    this.currentCamPath = 0;
+    this.cameraTime = 0;
+    this.tempVec = new THREE.Vector3();
+    this.camAnimating = true;
 };
 
 ClimateApp.prototype.update = function() {
     //Perform any updates
 
-
     //Animate geometry
     var delta = this.clock.getDelta();
+
+    //Camera animation
+
+    this.cameraTime += delta;
+    var path = this.camPaths[this.currentCamPath];
+    if(this.cameraTime >= path.waitTime && this.camAnimating) {
+        //Start animating
+        this.tempVec.copy(path.direction);
+        this.tempVec.multiplyScalar(delta * this.camAnimSpeed);
+        this.camera.position.add(this.tempVec);
+        this.controls.setLookAt(this.controls.getLookAt().add(this.tempVec));
+        this.tempVec.subVectors(path.endPos, this.camera.position);
+        if(this.camera.position.distanceTo(path.endPos) <= this.camMargin) {
+            this.cameraTime = 0;
+            if(++this.currentCamPath >= this.camPaths.length) {
+                this.currentCamPath = 0;
+                this.camAnimating = false;
+            }
+        }
+    }
+
     var attachedGeom = null;
     this.totalDelta += delta;
     if(this.totalDelta >= this.animationTime && this.animating) {
+        this.totalDelta = 0;
         //Adjust indices
-        var camPos = this.camera.position;
-        var camDist = this.camAnimLength * delta * this.camAnimSpeed;
-        var lookAt = this.controls.getLookAt();
-        this.camera.position.set(camPos.x+camDist, camPos.y, camPos.z);
-        this.controls.setLookAt(lookAt.x+camDist, lookAt.y, lookAt.z);
-
         var geom = this.animationGeoms[this.currentAnimation];
         if(geom.attachedGeom) {
             attachedGeom = geom.attachedGeom;
@@ -348,7 +379,6 @@ ClimateApp.prototype.update = function() {
             if(attachedGeom) {
                 attachedGeom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
             }
-            this.totalDelta = 0;
         } else {
             //Show temp label
             if(this.currentAnimation > 0) {
@@ -463,7 +493,7 @@ ClimateApp.prototype.createScene = function() {
 
     var lineMesh = new THREE.Mesh(lineGeom, lineMat);
     lineMesh.position.x = -500;
-    lineMesh.position.y = 170;
+    lineMesh.position.y = 171.5;
     lineMesh.position.z = zStart;
     this.scene.add(lineMesh);
 
@@ -547,8 +577,6 @@ ClimateApp.prototype.createScene = function() {
         lineMesh.rotation.z = rotations[i];
         lineMesh.scale.x = scales[i] * scaleFactor;
         this.scene.add(lineMesh);
-
-
 
 
         //Temperature labels
