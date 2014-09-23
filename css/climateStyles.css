@@ -11,6 +11,7 @@ canvas {
     margin: 0;
     overflow: hidden;
     border-radius: 15px;
+    /*border: solid 1px black;*/
 }
 .centred {
     text-align: center;
@@ -50,10 +51,12 @@ canvas {
     margin-left: 20%;
     margin-right: 20%;
     margin-top: 10px;
+    margin-bottom: 5px;
 }
 .errorMsg {
     text-align: center;
     color: #ff2823;
+    height: 1em;
 }
 #dob,
 #timeStamp {

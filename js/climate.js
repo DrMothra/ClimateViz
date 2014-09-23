@@ -321,15 +321,30 @@ ClimateApp.prototype.init = function(container) {
     this.camAnimSpeed = 32;
     this.camMargin = 10;
 
-    var endPos = new THREE.Vector3(this.camera.position.x+this.camAnimLength, this.camera.position.y, this.camera.position.z);
-    var dirVec = new THREE.Vector3(endPos.x, endPos.y, endPos.z);
-    var pathProps = { waitTime : 36, direction : dirVec.sub(this.camera.position).normalize(), endPos : endPos};
-    this.camPaths = [ pathProps ];
-    endPos = new THREE.Vector3(1510, -170, 2360);
-    dirVec = new THREE.Vector3(endPos.x, endPos.y, endPos.z);
-    var startPos = new THREE.Vector3(3375, 0, 300);
-    pathProps = { waitTime : 5, direction : dirVec.sub(startPos).normalize(), endPos: endPos};
-    this.camPaths.push(pathProps);
+    var startPositions = [];
+    var endPositions = [];
+    var waitTimes = [36, 5];
+    this.camPaths = [];
+    //Phase 1
+    var camX = this.camera.position.x;
+    var camY = this.camera.position.y;
+    var camZ = this.camera.position.z;
+    startPositions.push(new THREE.Vector3(camX, camY, camZ));
+    endPositions.push(new THREE.Vector3(camX+this.camAnimLength, camY, camZ));
+
+    //Phase 2
+    startPositions.push(new THREE.Vector3(camX+this.camAnimLength, camY, camZ));
+    endPositions.push(new THREE.Vector3(1510, -170, 2360));
+
+    //var dirVec = new THREE.Vector3(endPos.x, endPos.y, endPos.z);
+
+
+    for(var i=0; i<startPositions.length; ++i) {
+        var dirVec = new THREE.Vector3();
+        dirVec.subVectors(endPositions[i], startPositions[i]);
+        var pathProps = { waitTime : waitTimes[i], direction : dirVec.normalize(), endPos : endPositions[i] };
+        this.camPaths.push(pathProps);
+    }
 
     this.currentCamPath = 0;
     this.cameraTime = 0;
@@ -416,7 +431,7 @@ ClimateApp.prototype.createScene = function() {
     this.labels = [];
     var vertices = [];
     var indices = [];
-    var lineWidth = 5;
+    var lineWidth = 3;
     var xStep = 10;
     var dataItems = 200;
     //Segments
@@ -430,7 +445,7 @@ ClimateApp.prototype.createScene = function() {
         colours.push(0xcfddce, 0xfe6e5d);
     }
     //Positions
-    var xStart = -470;
+    var xStart = -430;
     var yStart = 175;
     var zStart = -400;
     var positions = [];
@@ -470,8 +485,8 @@ ClimateApp.prototype.createScene = function() {
     }
 
     var maxYear = this.startYear + (dataItems-1)/2;
-    var labelColour = [130, 130, 130];
-    var labelScale = new THREE.Vector3(40, 10, 1);
+    var labelColour = [0, 0, 0];
+    var labelScale = new THREE.Vector3(75, 15, 1);
 
     //Thresholds
     var minThresh = 5.2;
@@ -491,14 +506,14 @@ ClimateApp.prototype.createScene = function() {
     this.animationGeoms.push(lineGeom);
 
     var lineMesh = new THREE.Mesh(lineGeom, lineMat);
-    lineMesh.position.x = -490;
+    lineMesh.position.x = -450;
     lineMesh.position.y = 171.5;
     lineMesh.position.z = zStart;
     this.scene.add(lineMesh);
 
     //Add temperature geometries for each year
-    var scaleFactor = 0.25;
-    var tempYOffset = 13.5;
+    var scaleFactor = 0.4;
+    var tempYOffset = 21;
     var tempPosition = new THREE.Vector3();
     //var glowMat = new THREE.MeshBasicMaterial( {color : 0xffff00});
     //Glow material for temperatures above threshold
@@ -580,7 +595,7 @@ ClimateApp.prototype.createScene = function() {
 
         //Temperature labels
         tempPosition.x = lineMesh.position.x;
-        tempPosition.y = lineMesh.position.y - (scales[i]*tempYOffset);
+        tempPosition.y = lineMesh.position.y - (scales[i]* (i%2 ? tempYOffset : tempYOffset+1));
         tempPosition.z = lineMesh.position.z;
         var label = createLabel(scales[i], tempPosition, labelScale, labelColour, 12, 1);
         label.name = 'tempLabel'+i;
@@ -615,7 +630,7 @@ ClimateApp.prototype.resetScene = function() {
     this.animationTime = 0.01;
 
     //Reset cam position
-    this.camera.position.set(0, 0, 300);
+    this.camera.position.set(0, 0, 200);
     var lookAt = new THREE.Vector3();
     this.controls.setLookAt(lookAt);
 };
