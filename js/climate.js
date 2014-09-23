@@ -358,7 +358,7 @@ ClimateApp.prototype.update = function() {
             this.cameraTime = 0;
             if(++this.currentCamPath >= this.camPaths.length) {
                 this.currentCamPath = 0;
-                this.camAnimating = false;
+                this.resetScene();
             }
         }
     }
@@ -383,10 +383,8 @@ ClimateApp.prototype.update = function() {
             //Show temp label
             if(this.currentAnimation > 0) {
                 var labelNum = this.currentAnimation - 1;
-                var label = this.scene.getObjectByName('tempLabel'+labelNum);
-                if(label && label instanceof THREE.Sprite) {
-                    label.visible = true;
-                }
+                var label = this.labels[labelNum];
+                label.visible = true;
             }
 
             ++this.currentAnimation;
@@ -415,6 +413,7 @@ ClimateApp.prototype.createScene = function() {
     BaseApp.prototype.createScene.call(this);
 
     this.lastIndexPos = 0;
+    this.labels = [];
     var vertices = [];
     var indices = [];
     var lineWidth = 5;
@@ -428,7 +427,7 @@ ClimateApp.prototype.createScene = function() {
     //Colours
     var colours = [];
     for(var i=0; i<dataItems; ++i) {
-        colours.push(0x3e70ff, 0xff4E35);
+        colours.push(0xcfddce, 0xfe6e5d);
     }
     //Positions
     var xStart = -470;
@@ -492,7 +491,7 @@ ClimateApp.prototype.createScene = function() {
     this.animationGeoms.push(lineGeom);
 
     var lineMesh = new THREE.Mesh(lineGeom, lineMat);
-    lineMesh.position.x = -500;
+    lineMesh.position.x = -490;
     lineMesh.position.y = 171.5;
     lineMesh.position.z = zStart;
     this.scene.add(lineMesh);
@@ -511,7 +510,7 @@ ClimateApp.prototype.createScene = function() {
                 "c":   { type: "f", value: 1.0 },
                 "p":   { type: "f", value: 0.5 },
                 "intensity": { type: "f", value: 1.0 },
-                glowColor: { type: "c", value: new THREE.Color(0xffff00) },
+                glowColor: { type: "c", value: new THREE.Color(0xF6D287) },
                 viewVector: { type: "v3", value: _this.camera.position }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
@@ -586,6 +585,7 @@ ClimateApp.prototype.createScene = function() {
         var label = createLabel(scales[i], tempPosition, labelScale, labelColour, 12, 1);
         label.name = 'tempLabel'+i;
         label.visible = false;
+        this.labels.push(label);
         this.scene.add(label);
 
         if(year < maxYear) {
@@ -593,6 +593,31 @@ ClimateApp.prototype.createScene = function() {
             this.scene.add(label);
         }
     }
+};
+
+ClimateApp.prototype.resetScene = function() {
+    //Reset all geom offsets
+    for(var i=0; i<this.animationGeoms.length; ++i) {
+        var geom = this.animationGeoms[i];
+        geom.offsets = [ { start: 0, count: 0, index: 0 } ];
+        if(geom.attachedGeom) {
+            geom.attachedGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
+        }
+    }
+
+    for(var i=0; i<this.labels.length; ++i) {
+        this.labels[i].visible = false;
+    }
+
+    //Reset animations
+    this.currentAnimation = 0;
+    this.animating = true;
+    this.animationTime = 0.01;
+
+    //Reset cam position
+    this.camera.position.set(0, 0, 300);
+    var lookAt = new THREE.Vector3();
+    this.controls.setLookAt(lookAt);
 };
 
 ClimateApp.prototype.parseFile = function() {
@@ -659,6 +684,41 @@ ClimateApp.prototype.onKeyDown = function(event) {
     }
 };
 
+var date = null;
+var code = null;
+var validData = false;
+
+function onGetData() {
+    //Validate data
+    date = parseInt($('#dob').val());
+    //DEBUG
+    //console.log('DOB =', date);
+
+    if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
+
+    //Adjust these to October - set to September for testing
+    var lower = Math.round(new Date(2014, 8, 1, 0, 0, 0).getTime()/1000);
+    var upper = Math.round(new Date(2014, 9, 31, 23, 59, 59).getTime()/1000);
+    //DEBUG
+    //console.log('Limits =', upper, lower);
+
+    code = parseInt($('#timeStamp').val());
+    //DEBUG
+    //console.log('Time =', code);
+
+    if(isNaN(code) || code < lower || code > upper) return 'badCode';
+
+    validData = true;
+}
+
+function displayError(msg) {
+    //Display error message
+    var output = $('#msgOutput');
+    if(output) {
+        output.html(msg);
+    }
+}
+
 $(document).ready(function() {
     //Initialise app
     var container = document.getElementById("WebGL-output");
@@ -669,6 +729,26 @@ $(document).ready(function() {
     //GUI callbacks
     $("#chooseFile").on("change", function(evt) {
         app.onSelectFile(evt);
+    });
+
+    $("#getData").on('click', function(evt) {
+        var status = onGetData();
+        if(validData) {
+            window.open('weather.html?dob='+date+'&code='+code, '_self');
+        } else {
+            switch (status) {
+                case 'badDate':
+                    displayError('Enter a correct birth year');
+                    break;
+
+                case 'badCode':
+                    displayError('Enter a valid prediction code');
+                    break;
+
+                default :
+                    displayError('Incorrect numbers - try again');
+            }
+        }
     });
 
     $(document).keydown(function (event) {

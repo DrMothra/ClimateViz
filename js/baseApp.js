@@ -29,10 +29,7 @@ BaseApp.prototype.init = function(container) {
     this.createCamera();
     this.createControls();
     this.projector = new THREE.Projector();
-    this.stats = initStats();
-    this.statsShowing = true;
-    //DEBUG
-    $("#Stats-output").hide();
+    //this.stats = initStats();
     this.statsShowing = false;
 };
 
@@ -40,7 +37,7 @@ BaseApp.prototype.createRenderer = function() {
     this.renderer = new THREE.WebGLRenderer( {antialias : true});
     this.renderer.setClearColor(0xcdcdcd, 1.0);
     this.renderer.shadowMapEnabled = true;
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(this.container.clientWidth, window.innerHeight*0.6);
     this.container.appendChild( this.renderer.domElement );
     var _this = this;
 

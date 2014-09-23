@@ -1,44 +1,22 @@
 /* Styles for climate change visualisations */
 
 body {
+
+}
+canvas {
+    border-radius: 15px;
+}
+#WebGL-output {
     /* set margin to 0 and overflow to hidden, to go fullscreen */
     margin: 0;
     overflow: hidden;
+    border-radius: 15px;
 }
 .centred {
     text-align: center;
 }
 .fullWidth {
     width: 100%;
-}
-.version {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: #7fa5ff;
-}
-.mainButton {
-    border-radius: 5px;
-    position: absolute;
-    padding: 5px;
-    background-color: rgba(150, 150, 150, 0.5);
-    overflow: hidden;
-    color: #7fa5ff;
-}
-#loadButton {
-    top: 50px;
-    left: 75px;
-}
-.upload {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    margin: 0;
-    padding: 0px;
-    font-size: 20px;
-    cursor: pointer;
-    opacity: 0;
-    background-color: #004040;
 }
 .userInput {
     position: absolute;
@@ -48,9 +26,10 @@ body {
 }
 
 .weather img {
-    max-height: 70%;
-    max-width: 256px;
+    height: 80%;
+    width: 70%;
 }
+
 #weatherViz {
     background-color: #f4eede;
 }
@@ -62,6 +41,10 @@ body {
     margin-bottom: 2%;
     font-size: 2em;
     text-align: center;
+}
+.footer {
+    width: 90%;
+    height: 20px;
 }
 .dataInput {
     margin-left: 20%;

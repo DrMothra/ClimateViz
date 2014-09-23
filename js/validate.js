@@ -42,7 +42,7 @@ $(document).ready(function() {
     $("#getData").on('click', function(evt) {
         var status = onGetData();
         if(validData) {
-            window.open('pictures.html?dob='+date+'&code='+code, '_self');
+            window.open('weather.html?dob='+date+'&code='+code, '_self');
         } else {
             switch (status) {
                 case 'badDate':

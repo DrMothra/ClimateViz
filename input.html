@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <title>Weather Data</title>
 
+    <script type="text/javascript" src="js/three_v68.js?v=0.68"></script>
     <script type="text/javascript" src="js/jquery-1.9.0.js"></script>
-    <script type="text/javascript" src="js/validate.js"></script>
+    <script type="text/javascript" src="js/TrackballControls.js"></script>
+    <script type="text/javascript" src="js/baseApp.js"></script>
+
+    <!-- ---------------- Custom Shader Code ------------------------ -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        uniform vec3 viewVector;
+        uniform float c;
+        uniform float p;
+        void main()
+        {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+    </script>
+
+    <script id="fragmentShader" type="x-shader/x-vertex">
+        uniform vec3 glowColor;
+        uniform float alpha;
+        uniform float intensity;
+        void main()
+        {
+	        vec3 glow = glowColor * intensity;
+            gl_FragColor = vec4( glow, 0.5 );
+        }
+    </script>
+
+    <script type="text/javascript" src="js/climate.js"></script>
 
     <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
     <link href="css/climateStyles.css?v=0.1" rel="stylesheet" type="text/css">
@@ -30,6 +56,20 @@
 
     </div>
 </div>
+<div class="pure-g">
+    <div class="pure-u-1-12">
 
+    </div>
+    <!-- Div which will hold the Output -->
+    <div id="WebGL-output" class="pure-u-5-6">
+
+    </div>
+    <div class="pure-u-1-12">
+
+    </div>
+</div>
+<div class="footer">
+    <p class="centred">Explanatory text</p>
+</div>
 </body>
 </html>
