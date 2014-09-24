@@ -289,32 +289,18 @@ ClimateApp.prototype = new BaseApp();
 
 ClimateApp.prototype.init = function(container) {
     BaseApp.prototype.init.call(this, container);
-    this.data = null;
-    this.updateRequired = false;
     this.guiControls = null;
-    this.dataFile = null;
-    this.filename = '';
-    //Rendering groups
-    this.labelGroups = [];
+
     //Time data
-    this.startYear = 0;
-    this.endYear = 0;
-
-    //Timestreams
-    this.remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
-    this.measure = 'measurement_container/wp_ekx42t_1_ts_temperature_4';
-    this.publicKey = 'c9bcd7f338';
-
     this.startYear = 1914;
+
     //Parameters
-    this.timeOffset = 60 * 30;
     this.totalDelta = 0;
     this.animationTime = 0.01;
     this.animating = true;
     this.animationGeoms = [];
     this.currentAnimation = 0;
     this.glowTime = 0;
-    this.waveDirection = 1;
 
     //Camera animation
     this.camAnimLength = 3375;
@@ -336,9 +322,6 @@ ClimateApp.prototype.init = function(container) {
     startPositions.push(new THREE.Vector3(camX+this.camAnimLength, camY, camZ));
     endPositions.push(new THREE.Vector3(1510, -170, 2360));
 
-    //var dirVec = new THREE.Vector3(endPos.x, endPos.y, endPos.z);
-
-
     for(var i=0; i<startPositions.length; ++i) {
         var dirVec = new THREE.Vector3();
         dirVec.subVectors(endPositions[i], startPositions[i]);
@@ -359,7 +342,6 @@ ClimateApp.prototype.update = function() {
     var delta = this.clock.getDelta();
 
     //Camera animation
-
     this.cameraTime += delta;
     var path = this.camPaths[this.currentCamPath];
     if(this.cameraTime >= path.waitTime && this.camAnimating) {
@@ -410,14 +392,9 @@ ClimateApp.prototype.update = function() {
         }
     }
 
-    var glow = this.glowTime;
-    if(glow >= 0.7) this.waveDirection = -1;
-    if(glow < 0) this.waveDirection = 1;
-    this.glowMat.uniforms.intensity.value = glow;
-    this.glowTime += (delta * this.waveDirection);
-
-    //DEBUG
-    //console.log('Glow =', glow);
+    //this.glowMat.uniforms.intensity.value = 1.4375 + (0.4375*Math.sin(this.glowTime));
+    this.glowMat.uniforms.intensity.value =  1 + Math.sin(this.glowTime);
+    this.glowTime += 0.1;
 
     BaseApp.prototype.update.call(this);
 };
@@ -518,23 +495,20 @@ ClimateApp.prototype.createScene = function() {
     //var glowMat = new THREE.MeshBasicMaterial( {color : 0xffff00});
     //Glow material for temperatures above threshold
     var _this = this;
+
     this.glowMat = new THREE.ShaderMaterial(
         {
             uniforms:
             {
-                "c":   { type: "f", value: 1.0 },
-                "p":   { type: "f", value: 0.5 },
                 "intensity": { type: "f", value: 1.0 },
-                glowColor: { type: "c", value: new THREE.Color(0xF6D287) },
-                viewVector: { type: "v3", value: _this.camera.position }
+                "glowColor": { type: "c", value: new THREE.Color(0xffff00) }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-            side: THREE.FrontSide,
-            blending: THREE.AdditiveBlending,
             transparent: true
         }
     );
+
 
     for(var i= 0, year=this.startYear; i<dataItems; ++i, ++year) {
 
@@ -559,10 +533,10 @@ ClimateApp.prototype.createScene = function() {
             lineMesh = new THREE.Mesh(glowGeom, lineMat);
             lineMesh.position.x = positions[i].x - 0.5;
             lineMesh.position.y = positions[i].y;
-            lineMesh.position.z = positions[i].z;
+            lineMesh.position.z = positions[i].z - 0.5;
             lineMesh.rotation.z = rotations[i];
             lineMesh.scale.x = scales[i] * scaleFactor * 1.01;
-            lineMesh.scale.y *= 1.25;
+            lineMesh.scale.y *= 1.3;
             this.scene.add(lineMesh);
         }
 
@@ -575,7 +549,7 @@ ClimateApp.prototype.createScene = function() {
         lineGeom.attachedGeom = glow ? glowGeom : null;
         lineGeom.dynamic = true;
         lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-        lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF4E02E : colours[i]} );
+        lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF6D287 : colours[i]} );
 
         lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
         lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
@@ -633,70 +607,6 @@ ClimateApp.prototype.resetScene = function() {
     this.camera.position.set(0, 0, 200);
     var lookAt = new THREE.Vector3();
     this.controls.setLookAt(lookAt);
-};
-
-ClimateApp.prototype.parseFile = function() {
-    //Attempt to load and parse given json file
-    if(!this.filename) return;
-
-    console.log("Reading file...");
-
-    var reader = new FileReader();
-    var _this = this;
-    reader.onload = function(evt) {
-        //File loaded - parse it
-        console.log('file read: '+evt.target.result);
-        try {
-            _this.data = JSON.parse(evt.target.result);
-        }
-        catch (err) {
-            console.log('error parsing JSON file', err);
-            alert('Sorry, there was a problem reading that file');
-            return;
-        }
-        _this.generateData();
-    };
-
-    // Read in the file
-    reader.readAsText(this.dataFile, 'ISO-8859-1');
-};
-
-ClimateApp.prototype.onSelectFile = function(evt) {
-    //User selected file
-    //See if we support filereader API's
-    if (window.File && window.FileReader && window.FileList && window.Blob) {
-        //File APIs are supported.
-        var files = evt.target.files; // FileList object
-        if (files.length==0) {
-            console.log('no file specified');
-            this.filename = "";
-            return;
-        }
-        //Clear old data first
-        if(this.dataFile) {
-            this.reset();
-        }
-        this.dataFile = files[0];
-        this.filename = this.dataFile.name;
-        console.log("File chosen", this.filename);
-
-        //Try and read this file
-        this.parseFile();
-    }
-    else
-        alert('sorry, file apis not supported');
-};
-
-ClimateApp.prototype.onKeyDown = function(event) {
-    //Do any base app key handling
-    BaseApp.prototype.keydown.call(this, event);
-
-    switch (event.keyCode) {
-        case 80: //'P'
-            console.log("CamPos=", this.camera.position);
-            console.log("Lookat=", this.controls.getLookAt());
-            break;
-    }
 };
 
 var date = null;
@@ -764,10 +674,6 @@ $(document).ready(function() {
                     displayError('Incorrect numbers - try again');
             }
         }
-    });
-
-    $(document).keydown(function (event) {
-        app.onKeyDown(event);
     });
 
     app.run();
