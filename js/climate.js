@@ -344,6 +344,7 @@ ClimateApp.prototype.update = function() {
     //Camera animation
     this.cameraTime += delta;
     var path = this.camPaths[this.currentCamPath];
+
     if(this.cameraTime >= path.waitTime && this.camAnimating) {
         //Start animating
         this.tempVec.copy(path.direction);
@@ -362,6 +363,7 @@ ClimateApp.prototype.update = function() {
 
     var attachedGeom = null;
     this.totalDelta += delta;
+
     if(this.totalDelta >= this.animationTime && this.animating) {
         this.totalDelta = 0;
         //Adjust indices
@@ -373,10 +375,10 @@ ClimateApp.prototype.update = function() {
         this.lastIndexPos += 6;
         if(this.lastIndexPos <= length) {
             geom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
-            if(attachedGeom) {
-                attachedGeom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
-            }
         } else {
+            if(attachedGeom) {
+                attachedGeom.visible = true;
+            }
             //Show temp label
             if(this.currentAnimation > 0) {
                 var labelNum = this.currentAnimation - 1;
@@ -392,8 +394,9 @@ ClimateApp.prototype.update = function() {
         }
     }
 
+
     //this.glowMat.uniforms.intensity.value = 1.4375 + (0.4375*Math.sin(this.glowTime));
-    this.glowMat.uniforms.intensity.value =  1 + Math.sin(this.glowTime);
+    this.glowMat.uniforms.intensity.value =  0.25 + (Math.sin(this.glowTime)/4);
     this.glowTime += 0.1;
 
     BaseApp.prototype.update.call(this);
@@ -496,12 +499,13 @@ ClimateApp.prototype.createScene = function() {
     //Glow material for temperatures above threshold
     var _this = this;
 
+
     this.glowMat = new THREE.ShaderMaterial(
         {
             uniforms:
             {
-                "intensity": { type: "f", value: 1.0 },
-                "glowColor": { type: "c", value: new THREE.Color(0xffff00) }
+                "intensity" : { type: "f", value: 0.5 },
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glow.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -510,11 +514,15 @@ ClimateApp.prototype.createScene = function() {
     );
 
 
+    //var texture = THREE.ImageUtils.loadTexture("images/glow.png");
+    //this.glowMat = new THREE.MeshLambertMaterial({map: texture, transparent: true, opacity: 0.5});
+
     for(var i= 0, year=this.startYear; i<dataItems; ++i, ++year) {
 
         var glow = false;
         if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
 
+        /*
         if( glow) {
             vertices.length = 0;
             indices.length = 0;
@@ -531,13 +539,29 @@ ClimateApp.prototype.createScene = function() {
             glowGeom.computeBoundingSphere();
 
             lineMesh = new THREE.Mesh(glowGeom, lineMat);
-            lineMesh.position.x = positions[i].x - 0.5;
+            lineMesh.position.x = positions[i].x - 0.6;
             lineMesh.position.y = positions[i].y;
             lineMesh.position.z = positions[i].z - 0.5;
             lineMesh.rotation.z = rotations[i];
             lineMesh.scale.x = scales[i] * scaleFactor * 1.01;
-            lineMesh.scale.y *= 1.3;
+            lineMesh.scale.y *= 1.5;
             this.scene.add(lineMesh);
+        }
+        */
+
+        if(glow) {
+            var glowGeom = new THREE.BoxGeometry(50, 10, 0.1);
+            var mat = this.glowMat;
+            var glowMesh = new THREE.Mesh(glowGeom, mat);
+            glowMesh.position.x = positions[i].x;
+            var yOffset = i%2 ? 180 : 60;
+            glowMesh.position.y = positions[i].y - yOffset;
+            glowMesh.position.z = positions[i].z - 0.5;
+            glowMesh.rotation.z = rotations[i];
+            glowMesh.scale.x = scales[i] * scaleFactor * 3;
+            glowMesh.scale.y *= 5;
+            glowMesh.visible = false;
+            this.scene.add(glowMesh);
         }
 
         vertices.length = 0;
@@ -546,14 +570,14 @@ ClimateApp.prototype.createScene = function() {
 
         createGeometry(lineWidth, xStep, segments[i], vertices, indices, normals);
         lineGeom = new THREE.BufferGeometry();
-        lineGeom.attachedGeom = glow ? glowGeom : null;
+        lineGeom.attachedGeom = glow ? glowMesh : null;
         lineGeom.dynamic = true;
         lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
         lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF6D287 : colours[i]} );
 
         lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
         lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
-        lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
+        //lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
         lineGeom.computeBoundingSphere();
         this.animationGeoms.push(lineGeom);
 

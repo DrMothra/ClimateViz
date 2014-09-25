@@ -11,20 +11,25 @@
 
     <!-- ---------------- Custom Shader Code ------------------------ -->
     <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
         void main()
         {
+            vUv = uv;
             gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         }
     </script>
 
     <script id="fragmentShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
         uniform float intensity;
-        uniform vec3 glowColor;
+        uniform sampler2D glowTexture;
         void main()
         {
             //vec4 colour = vec4(glowColor, 1.0);
             //gl_FragColor = colour * intensity;
-            gl_FragColor = vec4(glowColor, intensity);
+            vec4 tex = texture2D(glowTexture, vUv);
+            gl_FragColor = vec4(tex.r, tex.g, tex.b, tex.a);
+            gl_FragColor.a *= intensity;
         }
     </script>
 
