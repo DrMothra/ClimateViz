@@ -30,7 +30,7 @@ canvas {
     margin: 0;
     overflow: hidden;
     border-radius: 15px;
-    /*border: solid 1px black;*/
+    /*border: solid 2px white;*/
 }
 .centred {
     text-align: center;
@@ -73,6 +73,11 @@ canvas {
     text-align: center;
     color: #ff2823;
     height: 1em;
+}
+#webGLError {
+    text-align: center;
+    font-size: 2em;
+    margin: 5%;
 }
 #dob,
 #timeStamp {

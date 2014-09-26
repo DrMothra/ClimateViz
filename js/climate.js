@@ -411,7 +411,7 @@ ClimateApp.prototype.createScene = function() {
     this.labels = [];
     var vertices = [];
     var indices = [];
-    var lineWidth = 3;
+    var lineWidth = 5;
     var xStep = 10;
     var dataItems = 200;
     //Segments
@@ -465,7 +465,7 @@ ClimateApp.prototype.createScene = function() {
     }
 
     var maxYear = this.startYear + (dataItems-1)/2;
-    var labelColour = [0, 0, 0];
+    var labelColour = [255, 255, 255];
     var labelScale = new THREE.Vector3(75, 15, 1);
 
     //Thresholds
@@ -478,7 +478,7 @@ ClimateApp.prototype.createScene = function() {
     lineGeom.attachedGeom = null;
     lineGeom.dynamic = true;
     lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-    var lineMat = new THREE.MeshBasicMaterial( {color : 0x000000} );
+    var lineMat = new THREE.MeshBasicMaterial( {color : 0xffffff} );
     lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
     lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
     lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
@@ -614,7 +614,7 @@ ClimateApp.prototype.resetScene = function() {
         var geom = this.animationGeoms[i];
         geom.offsets = [ { start: 0, count: 0, index: 0 } ];
         if(geom.attachedGeom) {
-            geom.attachedGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
+            geom.attachedGeom.visible = false;
         }
     }
 
@@ -646,10 +646,10 @@ function onGetData() {
     if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
 
     //Adjust these to October - set to September for testing
-    var lower = Math.round(new Date(2014, 8, 1, 0, 0, 0).getTime()/1000);
+    var lower = Math.round(new Date(2014, 9, 1, 0, 0, 0).getTime()/1000);
     var upper = Math.round(new Date(2014, 9, 31, 23, 59, 59).getTime()/1000);
     //DEBUG
-    //console.log('Limits =', upper, lower);
+    console.log('Limits =', upper, lower);
 
     code = parseInt($('#timeStamp').val());
     //DEBUG
@@ -669,17 +669,7 @@ function displayError(msg) {
 }
 
 $(document).ready(function() {
-    //Initialise app
-    var container = document.getElementById("WebGL-output");
-    var app = new ClimateApp();
-    app.init(container);
-    app.createScene();
-
     //GUI callbacks
-    $("#chooseFile").on("change", function(evt) {
-        app.onSelectFile(evt);
-    });
-
     $("#getData").on('click', function(evt) {
         var status = onGetData();
         if(validData) {
@@ -700,5 +690,17 @@ $(document).ready(function() {
         }
     });
 
-    app.run();
+    //Initialise app
+    var glSupport = $('#webGLError');
+    glSupport.hide();
+    if ( ! Detector.webgl ) {
+        glSupport.show();
+    } else {
+        var container = document.getElementById("WebGL-output");
+        var app = new ClimateApp();
+        app.init(container);
+        app.createScene();
+
+        app.run();
+    }
 });

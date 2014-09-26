@@ -246,6 +246,8 @@ function parseParams(param, paramText) {
 function getValue(response) {
     //Get temperature value from response
     var data = JSON.parse(response);
+    if(data.data.length == 0) return null;
+
     console.log("Data =", data.data[0].value);
 
     return data.data[0].value;
@@ -254,12 +256,15 @@ function getValue(response) {
 function updateTempImage(value, container) {
     //Display image according to temperature
     var temp = null;
-    for(var i=0; i<tempRanges.length; ++i) {
-        if(value > tempRanges[i]) {
-            temp = tempRanges[i];
-            break;
+    if(value != null) {
+        for(var i=0; i<tempRanges.length; ++i) {
+            if(value > tempRanges[i]) {
+                temp = tempRanges[i];
+                break;
+            }
         }
     }
+
     var image = $('#'+container+'Image');
     switch(temp) {
         case HEATWAVE:
@@ -282,6 +287,9 @@ function updateTempImage(value, container) {
             break;
         case ARCTIC:
             image.attr('src', 'images/arctic_sketch.jpeg');
+            break;
+        case null:
+            image.attr('src', 'images/exclamation.png');
             break;
         default:
             console.log('Invalid temperature');
@@ -306,7 +314,7 @@ function getTimestreamData(dob, code, measure, container) {
                 console.log('response =', xmlHttp.responseText);
                 var value = getValue(xmlHttp.responseText);
                 var output = $('#'+container);
-                output.html(value);
+                output.html(value != null ? value : 'Oops! No data!');
                 //Update temperature image if required
                 if(container.indexOf('temperature') >= 0) {
                     updateTempImage(value, container);
