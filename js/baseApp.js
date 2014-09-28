@@ -31,13 +31,21 @@ BaseApp.prototype.init = function(container) {
     this.projector = new THREE.Projector();
     //this.stats = initStats();
     this.statsShowing = false;
+
 };
 
 BaseApp.prototype.createRenderer = function() {
     this.renderer = new THREE.WebGLRenderer( {antialias : true});
     this.renderer.setClearColor(0x000000, 1.0);
     this.renderer.shadowMapEnabled = true;
-    this.renderer.setSize(this.container.clientWidth, window.innerHeight*0.5);
+    var isMSIE = /*@cc_on!@*/0;
+
+    var width = this.container.clientWidth;
+    if (isMSIE) {
+        // do IE-specific things
+        width = window.innerWidth;
+    }
+    this.renderer.setSize(width, window.innerHeight*0.5);
     this.container.appendChild( this.renderer.domElement );
     var _this = this;
 
@@ -49,6 +57,9 @@ BaseApp.prototype.createRenderer = function() {
     }, false);
     this.container.addEventListener('mousemove', function(event) {
         _this.mouseMoved(event);
+    }, false);
+    window.addEventListener('resize', function(event) {
+        _this.windowResize(event);
     }, false);
 };
 
@@ -94,6 +105,15 @@ BaseApp.prototype.mouseMoved = function(event) {
     //Update mouse state
     this.mouse.endX = event.clientX;
     this.mouse.endY = event.clientY;
+};
+
+BaseApp.prototype.windowResize = function(event) {
+    //Handle window resize
+    this.camera.aspect = window.innerHeight / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize( this.container.clientWidth, window.innerHeight*0.5 );
+    //console.log('Size =', )
 };
 
 BaseApp.prototype.createScene = function() {
@@ -149,7 +169,7 @@ BaseApp.prototype.createControls = function() {
 
 BaseApp.prototype.update = function() {
     //Do any updates
-    this.controls.update();
+    //this.controls.update();
 };
 
 BaseApp.prototype.run = function(timestamp) {

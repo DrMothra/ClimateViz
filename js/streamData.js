@@ -289,7 +289,7 @@ function updateTempImage(value, container) {
             image.attr('src', 'images/arctic_sketch.jpeg');
             break;
         case null:
-            image.attr('src', 'images/exclamation.png');
+            image.attr('src', 'images/error.png');
             break;
         default:
             console.log('Invalid temperature');
@@ -367,7 +367,7 @@ $(document).ready(function() {
 
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
-        getTimestreamData(dob, code, measurements[1], 'precipitationPresent');
+        //getTimestreamData(dob, code, measurements[1], 'precipitationPresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
         getPastData(dob);
     }

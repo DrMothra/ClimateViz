@@ -309,7 +309,12 @@ ClimateApp.prototype.init = function(container) {
 
     var startPositions = [];
     var endPositions = [];
-    var waitTimes = [36, 5];
+    var camWaitTimes = [34, 5];
+    if(window.outerWidth <= 1280) {
+        camWaitTimes[0] = 27;
+        this.camAnimSpeed = 32;
+        this.camAnimLength = 3700;
+    }
     this.camPaths = [];
     //Phase 1
     var camX = this.camera.position.x;
@@ -325,7 +330,7 @@ ClimateApp.prototype.init = function(container) {
     for(var i=0; i<startPositions.length; ++i) {
         var dirVec = new THREE.Vector3();
         dirVec.subVectors(endPositions[i], startPositions[i]);
-        var pathProps = { waitTime : waitTimes[i], direction : dirVec.normalize(), endPos : endPositions[i] };
+        var pathProps = { waitTime : camWaitTimes[i], direction : dirVec.normalize(), endPos : endPositions[i] };
         this.camPaths.push(pathProps);
     }
 
@@ -342,7 +347,10 @@ ClimateApp.prototype.update = function() {
     var delta = this.clock.getDelta();
 
     //Camera animation
-    this.cameraTime += delta;
+    if(this.camAnimating) {
+        this.cameraTime += delta;
+    }
+
     var path = this.camPaths[this.currentCamPath];
 
     if(this.cameraTime >= path.waitTime && this.camAnimating) {
@@ -362,7 +370,9 @@ ClimateApp.prototype.update = function() {
     }
 
     var attachedGeom = null;
-    this.totalDelta += delta;
+    if(this.animating) {
+        this.totalDelta += delta;
+    }
 
     if(this.totalDelta >= this.animationTime && this.animating) {
         this.totalDelta = 0;
@@ -394,9 +404,10 @@ ClimateApp.prototype.update = function() {
         }
     }
 
+    for(var i=0; i<this.glowMats.length; ++i) {
+        this.glowMats[i].uniforms.intensity.value =  0.25 + (Math.sin(this.glowTime)/4);
+    }
 
-    //this.glowMat.uniforms.intensity.value = 1.4375 + (0.4375*Math.sin(this.glowTime));
-    this.glowMat.uniforms.intensity.value =  0.25 + (Math.sin(this.glowTime)/4);
     this.glowTime += 0.1;
 
     BaseApp.prototype.update.call(this);
@@ -425,7 +436,13 @@ ClimateApp.prototype.createScene = function() {
         colours.push(0xcfddce, 0xfe6e5d);
     }
     //Positions
-    var xStart = -430;
+    var xStart = -420;
+    //Alter starting position for differing screen widths
+    console.log("Width =", window.outerWidth);
+    if(window.outerWidth <= 1280) {
+        xStart = -320;
+    }
+    var lineStartX = xStart - 20;
     var yStart = 175;
     var zStart = -400;
     var positions = [];
@@ -486,7 +503,8 @@ ClimateApp.prototype.createScene = function() {
     this.animationGeoms.push(lineGeom);
 
     var lineMesh = new THREE.Mesh(lineGeom, lineMat);
-    lineMesh.position.x = -450;
+    lineMesh.position.x = lineStartX;
+    console.log('X = ', lineMesh.position.x);
     lineMesh.position.y = 171.5;
     lineMesh.position.z = zStart;
     this.scene.add(lineMesh);
@@ -499,13 +517,13 @@ ClimateApp.prototype.createScene = function() {
     //Glow material for temperatures above threshold
     var _this = this;
 
-
-    this.glowMat = new THREE.ShaderMaterial(
+    this.glowMats = [];
+    var glowBlueMat = new THREE.ShaderMaterial(
         {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glow.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowBlue.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -513,6 +531,20 @@ ClimateApp.prototype.createScene = function() {
         }
     );
 
+    this.glowMats.push(glowBlueMat);
+    var glowRedMat = new THREE.ShaderMaterial(
+        {
+            uniforms:
+            {
+                "intensity" : { type: "f", value: 0.5 },
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowRed.png") }
+            },
+            vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+            fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+            transparent: true
+        }
+    );
+    this.glowMats.push(glowRedMat);
 
     //var texture = THREE.ImageUtils.loadTexture("images/glow.png");
     //this.glowMat = new THREE.MeshLambertMaterial({map: texture, transparent: true, opacity: 0.5});
@@ -522,36 +554,9 @@ ClimateApp.prototype.createScene = function() {
         var glow = false;
         if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
 
-        /*
-        if( glow) {
-            vertices.length = 0;
-            indices.length = 0;
-            normals.length = 0;
-            createGeometry(lineWidth, xStep, segments[i], vertices, indices, normals);
-            var glowGeom = new THREE.BufferGeometry();
-            glowGeom.dynamic = true;
-            glowGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-            lineMat = this.glowMat;
-
-            glowGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
-            glowGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
-            glowGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
-            glowGeom.computeBoundingSphere();
-
-            lineMesh = new THREE.Mesh(glowGeom, lineMat);
-            lineMesh.position.x = positions[i].x - 0.6;
-            lineMesh.position.y = positions[i].y;
-            lineMesh.position.z = positions[i].z - 0.5;
-            lineMesh.rotation.z = rotations[i];
-            lineMesh.scale.x = scales[i] * scaleFactor * 1.01;
-            lineMesh.scale.y *= 1.5;
-            this.scene.add(lineMesh);
-        }
-        */
-
         if(glow) {
             var glowGeom = new THREE.BoxGeometry(50, 10, 0.1);
-            var mat = this.glowMat;
+            var mat = this.glowMats[i%2];
             var glowMesh = new THREE.Mesh(glowGeom, mat);
             glowMesh.position.x = positions[i].x;
             var yOffset = i%2 ? 180 : 60;
@@ -573,7 +578,8 @@ ClimateApp.prototype.createScene = function() {
         lineGeom.attachedGeom = glow ? glowMesh : null;
         lineGeom.dynamic = true;
         lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-        lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF6D287 : colours[i]} );
+        //lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF6D287 : colours[i]} );
+        lineMat = new THREE.MeshBasicMaterial( {color: colours[i]});
 
         lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
         lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
@@ -633,6 +639,17 @@ ClimateApp.prototype.resetScene = function() {
     this.controls.setLookAt(lookAt);
 };
 
+ClimateApp.prototype.onVisChange = function() {
+    //Stop animations when page not visible
+    if (isHidden()) {
+        this.camAnimating = false;
+        this.animating = false;
+    } else {
+        this.camAnimating = true;
+        this.animating = true;
+    }
+};
+
 var date = null;
 var code = null;
 var validData = false;
@@ -657,6 +674,11 @@ function onGetData() {
 
     if(isNaN(code) || code < lower || code > upper) return 'badCode';
 
+    //Options for users with no code
+    if(code == lower) {
+        code = Math.round(new Date().getTime()/1000);
+    }
+
     validData = true;
 }
 
@@ -666,6 +688,29 @@ function displayError(msg) {
     if(output) {
         output.html(msg);
     }
+}
+
+function isHidden() {
+    var prop = getHiddenProp();
+    if (!prop) return false;
+
+    return document[prop];
+}
+
+function getHiddenProp(){
+    var prefixes = ['webkit','moz','ms','o'];
+
+    // if 'hidden' is natively supported just return it
+    if ('hidden' in document) return 'hidden';
+
+    // otherwise loop over all the known prefixes until we find one
+    for (var i = 0; i < prefixes.length; i++){
+        if ((prefixes[i] + 'Hidden') in document)
+            return prefixes[i] + 'Hidden';
+    }
+
+    // otherwise it's not supported
+    return null;
 }
 
 $(document).ready(function() {
@@ -700,6 +745,14 @@ $(document).ready(function() {
         var app = new ClimateApp();
         app.init(container);
         app.createScene();
+
+        var visProp = getHiddenProp();
+        if (visProp) {
+            var evtname = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
+            document.addEventListener(evtname, function() {
+                app.onVisChange();
+            });
+        }
 
         app.run();
     }
