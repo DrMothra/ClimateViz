@@ -405,7 +405,7 @@ ClimateApp.prototype.update = function() {
     }
 
     for(var i=0; i<this.glowMats.length; ++i) {
-        this.glowMats[i].uniforms.intensity.value =  0.25 + (Math.sin(this.glowTime)/4);
+        this.glowMats[i].uniforms.intensity.value =  0.4 + (Math.sin(this.glowTime)/2.5);
     }
 
     this.glowTime += 0.1;
@@ -433,7 +433,7 @@ ClimateApp.prototype.createScene = function() {
     //Colours
     var colours = [];
     for(var i=0; i<dataItems; ++i) {
-        colours.push(0xcfddce, 0xfe6e5d);
+        colours.push(0x3c5b8a, 0xfe6e5d);
     }
     //Positions
     var xStart = -420;
@@ -676,9 +676,10 @@ function onGetData() {
 
     //Options for users with no code
     if(code == lower) {
-        code = Math.round(new Date().getTime()/1000);
+        code = Math.round(new Date().getTime()/1000) - (60*30);
     }
 
+    console.log('Now =', code);
     validData = true;
 }
 

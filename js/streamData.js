@@ -327,7 +327,7 @@ function getTimestreamData(dob, code, measure, container) {
     var diff = 8 * 60;
     //8 hour adjustment for US server + GMT
     var timeOffset = 60 * 60 * 8;
-    code += timeOffset;
+    //code += timeOffset;
     var min = code - diff;
     var max = code + diff;
 
