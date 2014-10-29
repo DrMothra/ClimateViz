@@ -350,6 +350,9 @@ function getPastData(birthYear) {
 
     updateTempImage(data[birthYear], 'temperaturePast');
 
+    output = $('#pastDate');
+    output.html('Past - October '+birthYear);
+
     output = $('#precipitationPast');
     data = meanYearlyPrecipOct[birthYear-minYear];
     output.html(data[birthYear]);
