@@ -225,9 +225,9 @@ function onGetData() {
 
     if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
 
-    //Adjust these to October - set to September for testing
-    var lower = Math.round(new Date(2014, 8, 1, 0, 0, 0).getTime()/1000);
-    var upper = Math.round(new Date(2014, 9, 31, 23, 59, 59).getTime()/1000);
+    //Adjust these to November
+    var lower = Math.round(new Date(2014, 10, 1, 0, 0, 0).getTime()/1000);
+    var upper = Math.round(new Date(2014, 10, 30, 23, 59, 59).getTime()/1000);
     //DEBUG
     //console.log('Limits =', upper, lower);
 
