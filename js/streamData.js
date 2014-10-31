@@ -373,25 +373,25 @@ function updateTempImage(value, container) {
     var image = $('#'+container+'Image');
     switch(temp) {
         case HEATWAVE:
-            image.attr('src', 'images/heatwave_sketch.jpeg');
+            image.attr('src', 'images/heatwave_sketch.png');
             break;
         case HOT:
-            image.attr('src', 'images/hot_sketch.jpeg');
+            image.attr('src', 'images/hot_sketch.png');
             break;
         case WARM:
-            image.attr('src', 'images/warm_sketch.jpeg');
+            image.attr('src', 'images/warm_sketch.png');
             break;
         case MILD:
-            image.attr('src', 'images/mild_sketch.jpeg');
+            image.attr('src', 'images/mild_sketch.png');
             break;
         case COLD:
-            image.attr('src', 'images/cold_sketch.jpeg');
+            image.attr('src', 'images/cold_sketch.png');
             break;
         case FREEZING:
-            image.attr('src', 'images/freezing_sketch.jpeg');
+            image.attr('src', 'images/freezing_sketch.png');
             break;
         case ARCTIC:
-            image.attr('src', 'images/arctic_sketch.jpeg');
+            image.attr('src', 'images/arctic_sketch.png');
             break;
         case null:
             image.attr('src', 'images/error.png');

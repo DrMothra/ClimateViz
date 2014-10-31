@@ -639,17 +639,6 @@ ClimateApp.prototype.resetScene = function() {
     this.controls.setLookAt(lookAt);
 };
 
-ClimateApp.prototype.onVisChange = function() {
-    //Stop animations when page not visible
-    if (isHidden()) {
-        this.camAnimating = false;
-        this.animating = false;
-    } else {
-        this.camAnimating = true;
-        this.animating = true;
-    }
-};
-
 var date = null;
 var code = null;
 var validData = false;
@@ -657,29 +646,22 @@ var validData = false;
 function onGetData() {
     //Validate data
     date = parseInt($('#dob').val());
-    //DEBUG
-    //console.log('DOB =', date);
 
     if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
 
-    //Adjust these to October - set to September for testing
+    //Allowable dates - October 2014 to December 2014
     var lower = Math.round(new Date(2014, 9, 1, 0, 0, 0).getTime()/1000);
-    var upper = Math.round(new Date(2014, 9, 31, 23, 59, 59).getTime()/1000);
-    //DEBUG
-    console.log('Limits =', upper, lower);
+    var upper = Math.round(new Date(2014, 11, 31, 23, 59, 59).getTime()/1000);
 
     code = parseInt($('#timeStamp').val());
-    //DEBUG
-    //console.log('Time =', code);
 
     if(isNaN(code) || code < lower || code > upper) return 'badCode';
 
-    //Options for users with no code
+    //Options for users with no code - get data from 30 minutes ago
     if(code == lower) {
         code = Math.round(new Date().getTime()/1000) - (60*30);
     }
 
-    console.log('Now =', code);
     validData = true;
 }
 
@@ -689,29 +671,6 @@ function displayError(msg) {
     if(output) {
         output.html(msg);
     }
-}
-
-function isHidden() {
-    var prop = getHiddenProp();
-    if (!prop) return false;
-
-    return document[prop];
-}
-
-function getHiddenProp(){
-    var prefixes = ['webkit','moz','ms','o'];
-
-    // if 'hidden' is natively supported just return it
-    if ('hidden' in document) return 'hidden';
-
-    // otherwise loop over all the known prefixes until we find one
-    for (var i = 0; i < prefixes.length; i++){
-        if ((prefixes[i] + 'Hidden') in document)
-            return prefixes[i] + 'Hidden';
-    }
-
-    // otherwise it's not supported
-    return null;
 }
 
 $(document).ready(function() {
@@ -746,14 +705,6 @@ $(document).ready(function() {
         var app = new ClimateApp();
         app.init(container);
         app.createScene();
-
-        var visProp = getHiddenProp();
-        if (visProp) {
-            var evtname = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
-            document.addEventListener(evtname, function() {
-                app.onVisChange();
-            });
-        }
 
         app.run();
     }
