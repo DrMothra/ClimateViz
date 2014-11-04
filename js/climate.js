@@ -657,9 +657,13 @@ function onGetData() {
 
     if(isNaN(code) || code < lower || code > upper) return 'badCode';
 
+    //Don't allow codes in the future
+    var now = Math.round(new Date().getTime()/1000);
+    if(code > now) return 'badCode';
+
     //Options for users with no code - get data from 30 minutes ago
     if(code == lower) {
-        code = Math.round(new Date().getTime()/1000) - (60*30);
+        code = now - (60*30);
     }
 
     validData = true;

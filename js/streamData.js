@@ -2,6 +2,8 @@
  * Created by atg on 16/09/2014.
  */
 
+    var monthNames = ['October', 'November', 'December'];
+
     var minYear = 1914;
     var meanYearlyPrecipOct =
 [
@@ -318,6 +320,113 @@ var meanYearlyNov =
         {"2014" :   -99}
     ];
 
+//Incorporate monthly temp values into one table
+//Table starts from 1914 and goes to 2014
+var meanMonthlyTemps = [
+    [10.3, 6.8,   4.6 ],
+    [9.1,  2.8,   5.3 ],
+    [10.55,6.8,   1.9 ],
+    [7.5,  7.8,   2.3 ],
+    [9.3,  5.5,   6.9 ],
+    [7.35, 3.3,   5.5 ],
+    [10.4, 6.8,   4.2 ],
+    [12.8, 4.6,   6.5 ],
+    [8.2,  5.9,   5.8 ],
+    [9.7,  3.3,   3.8 ],
+    [10.1, 7.1,   6.8 ],
+    [10.4, 3.6,   2.8 ],
+    [8.1,  5.9,   4.2 ],
+    [10.5, 6.2,   2.1 ],
+    [10.1, 7.6,   3.4 ],
+    [9.6,  6.7,   5.8 ],
+    [10.55,6.2,   4.3 ],
+    [8.8,  7.8,   5.3 ],
+    [8.8,  6.6,   5.7 ],
+    [10.10,5.6,   1.6 ],
+    [10.6, 6.1,   8.1 ],
+    [9.5,  6.9,   2.8 ],
+    [9.4,  5.5,   5.3 ],
+    [10.4, 5.1,   3.0 ],
+    [10.5, 9.4,   4.4 ],
+    [8.2,  8.7,   3.2 ],
+    [9.6,  6.9,   3.8 ],
+    [10.4, 6.6,   5.6 ],
+    [10.39,4.9,   6.7 ],
+    [10.60,6.3,   3.5 ],
+    [9.3,  6.2,   3.6 ],
+    [11.95,7.2,   4.9 ],
+    [9.8,  8.1,   3.1 ],
+    [10.6, 7.2,   5.1 ],
+    [10.14,7.3,   5.7 ],
+    [11.7, 6.6,   5.8 ],
+    [9.60, 5.7,   1.2 ],
+    [9.4,  8.5,   5.5 ],
+    [8.8,  4.2,   2.8 ],
+    [9.7,  8.5,   6.9 ],
+    [11.9, 6.9,   6.8 ],
+    [9.2,  7.0,   5.4 ],
+    [9.4,  6.0,   5.7 ],
+    [10.8, 6.4,   4.5 ],
+    [10.8, 6.4,   4.7 ],
+    [12.6, 7.1,   6.0 ],
+    [10.3, 7.3,   3.9 ],
+    [10.9, 6.0,   2.2 ],
+    [10.39,5.5,   1.8 ],
+    [11.15,8.2,   2.6 ],
+    [8.9,  7.4,   3.6 ],
+    [11,   4.5,   4.7 ],
+    [10.1, 5.6,   5.5 ],
+    [10.8, 5.4,   4.2 ],
+    [12.5, 6.5,   3.0 ],
+    [13,   5.4,   3.3 ],
+    [10.7, 7.8,   4.3 ],
+    [11.3, 6.0,   6.6 ],
+    [10.6, 6.3,   5.8 ],
+    [9,    6.0,   4.9 ],
+    [7.8,  6.8,   8.1 ],
+    [9.85, 6.3,   5.3 ],
+    [10.6, 6.3,   2.0 ],
+    [11.75,6.6,   6.1 ],
+    [11.9, 8.5,   3.9 ],
+    [11.35,6.8,   5.8 ],
+    [9.05, 6.6,   5.6 ],
+    [8.55, 7.8,   0.3 ],
+    [10.05,8.0,   4.4 ],
+    [10.45,7.5,   5.6 ],
+    [11.1, 8.0,   5.2 ],
+    [10.95,4.1,   6.3 ],
+    [11,   7.8,   6.2 ],
+    [9.7,  6.5,   5.6 ],
+    [10.39,5.2,   7.5 ],
+    [11.7, 6.2,   4.9 ],
+    [11.85,6.9,   4.3 ],
+    [10.2, 6.8,   4.7 ],
+    [7.8,  7.4,   3.6 ],
+    [8.45, 4.6,   5.5 ],
+    [10.2, 0.1,   6.4 ],
+    [12.9, 7.7,   2.3 ],
+    [11.65,5.9,   2.9 ],
+    [10.25,8.4,   5.8 ],
+    [10.64,6.2,   5.5 ],
+    [10.7, 7.9,   5.0 ],
+    [10.3, 7.0,   5.8 ],
+    [13.29,7.5,   3.6 ],
+    [10.1, 8.5,   5.7 ],
+    [9.25, 8.1,   4.8 ],
+    [10.5, 7.7,   5.4 ],
+    [13.1, 6.2,   4.4 ],
+    [13.05,8.1,   6.5 ],
+    [10.85,7.3,   4.9 ],
+    [9.65, 7.0,   3.5 ],
+    [11.55,8.7,   3.1 ],
+    [10.35,5.2,  -0.7 ],
+    [12.65,9.6,   6.0 ],
+    [9.65, 6.8,   4.8 ],
+    [12.5, 6.2,   6.3 ],
+    [-99,  -99,  -99.9]
+];
+
+
 //Temperatures
 var ARCTIC = -7;
 var FREEZING = -4;
@@ -446,16 +555,28 @@ function getTimestreamData(dob, code, measure, container) {
     xmlHttp.send( null );
 }
 
-function getPastData(birthYear) {
+function getPastData(code, birthYear) {
     //Populate page with past temperature data
-    var data = meanYearlyNov[birthYear-minYear];
-    var output = $('#temperaturePast');
-    output.html(data[birthYear]);
+    //Get month from code
+    var date = new Date(code*1000);
+    var month = date.getMonth();
 
-    updateTempImage(data[birthYear], 'temperaturePast');
+    var monthData = meanMonthlyTemps[birthYear-minYear];
+    //Convert month data relative to October
+    month -= 9;
+    if(month <0 || month >= monthData.length) {
+        console.log("Error parsing month");
+        return;
+    }
+    var temp = monthData[month];
+
+    var output = $('#temperaturePast');
+    output.html(temp);
+
+    updateTempImage(temp, 'temperaturePast');
 
     output = $('#pastDate');
-    output.html('Past - October '+birthYear);
+    output.html('Past - '+monthNames[month]+' '+birthYear);
 }
 
 $(document).ready(function() {
@@ -472,6 +593,6 @@ $(document).ready(function() {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
         //getTimestreamData(dob, code, measurements[1], 'precipitationPresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
-        getPastData(dob);
+        getPastData(code, dob);
     }
 });
