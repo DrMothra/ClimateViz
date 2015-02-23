@@ -338,6 +338,7 @@ ClimateApp.prototype.init = function(container) {
     this.cameraTime = 0;
     this.tempVec = new THREE.Vector3();
     this.camAnimating = true;
+    this.zoomInc = 5;
 };
 
 ClimateApp.prototype.update = function() {
@@ -425,6 +426,10 @@ ClimateApp.prototype.createScene = function() {
     var lineWidth = 5;
     var xStep = 10;
     var dataItems = 200;
+    //Group to hold all geometry
+    this.visGroup = new THREE.Object3D();
+    this.visGroup.name = 'visGroup';
+
     //Segments
     var segments = [];
     for(var i=0; i<dataItems; ++i) {
@@ -507,7 +512,7 @@ ClimateApp.prototype.createScene = function() {
     console.log('X = ', lineMesh.position.x);
     lineMesh.position.y = 171.5;
     lineMesh.position.z = zStart;
-    this.scene.add(lineMesh);
+    this.visGroup.add(lineMesh);
 
     //Add temperature geometries for each year
     var scaleFactor = 0.4;
@@ -566,7 +571,7 @@ ClimateApp.prototype.createScene = function() {
             glowMesh.scale.x = scales[i] * scaleFactor * 3;
             glowMesh.scale.y *= 5;
             glowMesh.visible = false;
-            this.scene.add(glowMesh);
+            this.visGroup.add(glowMesh);
         }
 
         vertices.length = 0;
@@ -594,7 +599,7 @@ ClimateApp.prototype.createScene = function() {
         lineMesh.position.z = positions[i].z;
         lineMesh.rotation.z = rotations[i];
         lineMesh.scale.x = scales[i] * scaleFactor;
-        this.scene.add(lineMesh);
+        this.visGroup.add(lineMesh);
 
 
         //Temperature labels
@@ -605,13 +610,16 @@ ClimateApp.prototype.createScene = function() {
         label.name = 'tempLabel'+i;
         label.visible = false;
         this.labels.push(label);
-        this.scene.add(label);
+        this.visGroup.add(label);
 
         if(year < maxYear) {
             var label = createLabel(year, labelPositions[i], labelScale, labelColour, 12, 1);
-            this.scene.add(label);
+            this.visGroup.add(label);
         }
     }
+
+    //Add all geometry to main group
+    this.scene.add(this.visGroup);
 };
 
 ClimateApp.prototype.resetScene = function() {
@@ -632,11 +640,40 @@ ClimateApp.prototype.resetScene = function() {
     this.currentAnimation = 0;
     this.animating = true;
     this.animationTime = 0.01;
+    this.camAnimating = true;
+    this.cameraTime = 0;
+    this.totalDelta = 0;
+    $('#playToggle').attr('src', "images/pause.png");
 
     //Reset cam position
     this.camera.position.set(0, 0, 200);
     var lookAt = new THREE.Vector3();
     this.controls.setLookAt(lookAt);
+    this.visGroup.position.z = 0;
+};
+
+ClimateApp.prototype.togglePlay = function() {
+    //Toggle vis animation
+    this.camAnimating = !this.camAnimating;
+    //Alter button images
+    var image = $('#playToggle');
+    var imageSrc = this.camAnimating ? 'images/pause.png' : 'images/play.png';
+    image.attr('src', imageSrc);
+};
+
+ClimateApp.prototype.zoomIn = function() {
+    //Zoom into scene
+    this.visGroup.position.z += this.zoomInc;
+};
+
+ClimateApp.prototype.zoomOut = function() {
+    //Zoom into scene
+    this.visGroup.position.z -= this.zoomInc;
+};
+
+ClimateApp.prototype.timeSlider = function(value) {
+    //Adjust slider
+    this.visGroup.position.x = -value;
 };
 
 var date = null;
@@ -709,6 +746,23 @@ $(document).ready(function() {
         var app = new ClimateApp();
         app.init(container);
         app.createScene();
+
+        //GUI callbacks
+        $("#play_pause").on('click', function() {
+            app.togglePlay();
+        });
+        $("#zoomIn").on('click', function() {
+            app.zoomIn();
+        });
+        $("#zoomOut").on('click', function() {
+            app.zoomOut();
+        });
+        $("#refresh").on('click', function() {
+            app.resetScene();
+        });
+        $("#timeLine").on('input', function() {
+            app.timeSlider(this.value);
+        });
 
         app.run();
     }
