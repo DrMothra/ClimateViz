@@ -557,6 +557,31 @@ function getTimestreamData(dob, code, measure, container) {
     xmlHttp.send( null );
 }
 
+function sendTimestreamData(measure) {
+    //Construct http request
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+            if (xmlHttp.responseText == "Not found") {
+                console.log('Not found');
+            }
+            else {
+                console.log('response =', xmlHttp.responseText);
+            }
+        }
+    }
+
+    var publicKey = 'c9bcd7f338';
+    var timeStamp = Math.round(Date.now() / 1000);
+    var cmd = remoteURL + measure + '?value=tony' + '&pubkey=' + publicKey + '&now=' + timeStamp;
+    //DEBUG
+    console.log('Cmd =', cmd);
+
+    xmlHttp.open( "POST", cmd, true );
+    xmlHttp.setRequestHeader("Accept","application/json");
+    xmlHttp.send( null );
+
+}
 function getPastData(code, birthYear) {
     //Populate page with past temperature data
     //Get month from code
@@ -586,7 +611,7 @@ function getPastData(code, birthYear) {
 $(document).ready(function() {
 
     var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_4', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
-        'measurement_container/wp_ekx42t_1_ts_temperature_14'];
+        'measurement_container/wp_ekx42t_1_ts_temperature_14', 'measurement_container/wp_ekx42t_1_ts_messages_24'];
     var dob = parseParams('dob', window.location.search);
     console.log('DOB =', dob);
 
@@ -597,6 +622,7 @@ $(document).ready(function() {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
         //getTimestreamData(dob, code, measurements[1], 'precipitationPresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
+        sendTimestreamData(measurements[3]);
         getPastData(code, dob);
     }
 });
