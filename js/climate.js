@@ -343,9 +343,34 @@ ClimateApp.prototype.init = function(container) {
 
 ClimateApp.prototype.update = function() {
     //Perform any updates
+    BaseApp.prototype.update.call(this);
 
     //Animate geometry
     var delta = this.clock.getDelta();
+
+    //Perform mouse hover
+    var vector = new THREE.Vector3(( (this.mouse.endX-159) / this.container.clientWidth ) * 2 - 1, -( this.mouse.endY / window.innerHeight ) * 2 + 1, 0.5);
+    this.projector.unprojectVector(vector, this.camera);
+
+    //DEBUG
+    console.log("Y =", this.mouse.endY);
+
+    var raycaster = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
+
+    this.hoverObjects.length = 0;
+    this.hoverObjects = raycaster.intersectObjects(this.scene.children, true);
+
+    //Perform hover actions
+    $('#info').hide();
+    if(this.hoverObjects.length != 0) {
+        for(var i=0; i<this.hoverObjects.length; ++i) {
+            if(this.hoverObjects[i].object.name.indexOf('glow') >= 0) {
+                console.log(this.hoverObjects[i].object.name);
+                $('#info').show();
+                break;
+            }
+        }
+    }
 
     //Camera animation
     if(this.camAnimating) {
@@ -410,8 +435,6 @@ ClimateApp.prototype.update = function() {
     }
 
     this.glowTime += 0.1;
-
-    BaseApp.prototype.update.call(this);
 };
 
 ClimateApp.prototype.createScene = function() {
@@ -452,7 +475,7 @@ ClimateApp.prototype.createScene = function() {
     var zStart = -400;
     var positions = [];
     var normals = [];
-    var gap = 10;
+    var gap = 17;
     var distance = 40;
     for(var i=0; i<dataItems; ++i) {
         positions.push(new THREE.Vector3(xStart, yStart, zStart-5));
@@ -469,10 +492,10 @@ ClimateApp.prototype.createScene = function() {
     var scales = [];
     for(var i=0; i<dataItems/2; ++i) {
         var minYear = minYearly[i];
-        var min = minYear[i+this.startYear];
+        var minTemp = minYear[i+this.startYear];
         var maxYear = maxYearly[i];
-        var max = maxYear[i+this.startYear];
-        scales.push(min, max);
+        var maxTemp = maxYear[i+this.startYear];
+        scales.push(minTemp, maxTemp);
     }
 
     //Labels
@@ -486,7 +509,7 @@ ClimateApp.prototype.createScene = function() {
         labelPositions.push(avg);
     }
 
-    var maxYear = this.startYear + (dataItems-1)/2;
+    var endYear = this.startYear + (dataItems-1)/2;
     var labelColour = [255, 255, 255];
     var labelScale = new THREE.Vector3(75, 15, 1);
 
@@ -518,7 +541,7 @@ ClimateApp.prototype.createScene = function() {
     var scaleFactor = 0.4;
     var tempYOffset = 21;
     var tempPosition = new THREE.Vector3();
-    //var glowMat = new THREE.MeshBasicMaterial( {color : 0xffff00});
+
     //Glow material for temperatures above threshold
     var _this = this;
 
@@ -554,23 +577,25 @@ ClimateApp.prototype.createScene = function() {
     //var texture = THREE.ImageUtils.loadTexture("images/glow.png");
     //this.glowMat = new THREE.MeshLambertMaterial({map: texture, transparent: true, opacity: 0.5});
 
-    for(var i= 0, year=this.startYear; i<dataItems; ++i, ++year) {
+    for(var i= 0; i<dataItems; ++i) {
 
         var glow = false;
         if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
 
         if(glow) {
-            var glowGeom = new THREE.BoxGeometry(50, 10, 0.1);
+            var glowGeom = new THREE.BoxGeometry(30, 5, 0.1);
             var mat = this.glowMats[i%2];
+            //var mat = new THREE.MeshBasicMaterial( {color: 0xff0000});
             var glowMesh = new THREE.Mesh(glowGeom, mat);
-            glowMesh.position.x = positions[i].x;
-            var yOffset = i%2 ? 180 : 60;
+            glowMesh.position.x = positions[i].x+2;
+            var yOffset = i%2 ? 130 : 60;
             glowMesh.position.y = positions[i].y - yOffset;
             glowMesh.position.z = positions[i].z - 0.5;
             glowMesh.rotation.z = rotations[i];
             glowMesh.scale.x = scales[i] * scaleFactor * 3;
             glowMesh.scale.y *= 5;
             glowMesh.visible = false;
+            glowMesh.name = scales[i] <= minThresh ? 'glowCold'+i : 'glowWarm'+i;
             this.visGroup.add(glowMesh);
         }
 
@@ -611,13 +636,14 @@ ClimateApp.prototype.createScene = function() {
         label.visible = false;
         this.labels.push(label);
         this.visGroup.add(label);
-
-        if(year < maxYear) {
-            var label = createLabel(year, labelPositions[i], labelScale, labelColour, 12, 1);
-            this.visGroup.add(label);
-        }
     }
 
+    //Labels
+    var label;
+    for(var year=this.startYear, i=0; year<endYear; ++year, ++i) {
+        label = createLabel(year, labelPositions[i], labelScale, labelColour, 12, 1);
+        this.visGroup.add(label);
+    }
     //Add all geometry to main group
     this.scene.add(this.visGroup);
 };
