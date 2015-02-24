@@ -121,9 +121,9 @@ input[type=range]::-webkit-slider-runnable-track {
     height: 10px;
 }
 #info {
-    padding: 3%;
+    padding: 2%;
     border-radius: 10px;
-    background-color: darkblue;
+    background-color: whitesmoke;
     position: fixed;
     top: 45%;
     left: 45%;

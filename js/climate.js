@@ -337,8 +337,11 @@ ClimateApp.prototype.init = function(container) {
     this.currentCamPath = 0;
     this.cameraTime = 0;
     this.tempVec = new THREE.Vector3();
-    this.camAnimating = true;
+    this.camAnimating = false;
+    this.camAnimEnabled = true;
     this.zoomInc = 5;
+    //Mouse over
+    this.mouseOverEnabled = true;
 };
 
 ClimateApp.prototype.update = function() {
@@ -349,11 +352,8 @@ ClimateApp.prototype.update = function() {
     var delta = this.clock.getDelta();
 
     //Perform mouse hover
-    var vector = new THREE.Vector3(( (this.mouse.endX-159) / this.container.clientWidth ) * 2 - 1, -( this.mouse.endY / window.innerHeight ) * 2 + 1, 0.5);
+    var vector = new THREE.Vector3(( (this.mouse.endX-this.container.offsetLeft) / this.container.clientWidth ) * 2 - 1, -( (this.mouse.endY-this.container.offsetTop) / this.container.offsetHeight ) * 2 + 1, 0.5);
     this.projector.unprojectVector(vector, this.camera);
-
-    //DEBUG
-    console.log("Y =", this.mouse.endY);
 
     var raycaster = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
 
@@ -362,25 +362,32 @@ ClimateApp.prototype.update = function() {
 
     //Perform hover actions
     $('#info').hide();
-    if(this.hoverObjects.length != 0) {
+    if(this.mouseOverEnabled && this.hoverObjects.length != 0) {
         for(var i=0; i<this.hoverObjects.length; ++i) {
-            if(this.hoverObjects[i].object.name.indexOf('glow') >= 0) {
-                console.log(this.hoverObjects[i].object.name);
-                $('#info').show();
+            var name = this.hoverObjects[i].object.name;
+            if(name.indexOf('glow') >= 0) {
+                var elem = $('#info');
+                elem.css('top', this.mouse.endY - 15);
+                elem.css('left', this.mouse.endX + 15);
+                elem.show();
+
+                elem.html(infoText.getText(name));
                 break;
             }
         }
     }
 
     //Camera animation
-    if(this.camAnimating) {
+    if(this.camAnimEnabled) {
         this.cameraTime += delta;
     }
 
     var path = this.camPaths[this.currentCamPath];
 
-    if(this.cameraTime >= path.waitTime && this.camAnimating) {
+    if(this.cameraTime >= path.waitTime && this.camAnimEnabled) {
         //Start animating
+        this.camAnimating = true;
+        this.mouseOverEnabled = false;
         this.tempVec.copy(path.direction);
         this.tempVec.multiplyScalar(delta * this.camAnimSpeed);
         this.camera.position.add(this.tempVec);
@@ -580,6 +587,7 @@ ClimateApp.prototype.createScene = function() {
     for(var i= 0; i<dataItems; ++i) {
 
         var glow = false;
+        var year = 0;
         if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
 
         if(glow) {
@@ -595,7 +603,8 @@ ClimateApp.prototype.createScene = function() {
             glowMesh.scale.x = scales[i] * scaleFactor * 3;
             glowMesh.scale.y *= 5;
             glowMesh.visible = false;
-            glowMesh.name = scales[i] <= minThresh ? 'glowCold'+i : 'glowWarm'+i;
+            year = Math.floor(i/2) + this.startYear;
+            glowMesh.name = scales[i] <= minThresh ? 'glowCold'+year : 'glowWarm'+year;
             this.visGroup.add(glowMesh);
         }
 
@@ -680,11 +689,19 @@ ClimateApp.prototype.resetScene = function() {
 
 ClimateApp.prototype.togglePlay = function() {
     //Toggle vis animation
-    this.camAnimating = !this.camAnimating;
+    this.camAnimEnabled = !this.camAnimEnabled;
+
     //Alter button images
     var image = $('#playToggle');
-    var imageSrc = this.camAnimating ? 'images/pause.png' : 'images/play.png';
+    var imageSrc = this.camAnimEnabled ? 'images/pause.png' : 'images/play.png';
     image.attr('src', imageSrc);
+    //See if we allow mouse overs
+    if(!this.camAnimEnabled || !this.camAnimating) {
+        this.mouseOverEnabled = true;
+    } else {
+        this.mouseOverEnabled = false;
+    }
+
 };
 
 ClimateApp.prototype.zoomIn = function() {
