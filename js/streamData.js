@@ -568,18 +568,24 @@ function sendTimestreamData(measure) {
             else {
                 console.log('response =', xmlHttp.responseText);
             }
+        } else if(xmlHttp.readyState == 4 && xmlHttp.status === 405) {
+            console.log(xmlHttp.responseText);
         }
-    }
+    };
 
     var publicKey = 'c9bcd7f338';
     var timeStamp = Math.round(Date.now() / 1000);
-    var cmd = remoteURL + measure + '?value=tony' + '&pubkey=' + publicKey + '&now=' + timeStamp;
+    var url = remoteURL + measure;
     //DEBUG
-    console.log('Cmd =', cmd);
+    console.log('URL =', url);
 
-    xmlHttp.open( "POST", cmd, true );
+    xmlHttp.open( "POST", url, true );
     xmlHttp.setRequestHeader("Accept","application/json");
-    xmlHttp.send( null );
+    xmlHttp.setRequestHeader("Content-Type", "text/plain");
+    var cmd = "value=1"+"&pubkey="+publicKey+"&now="+timeStamp;
+    //DEBUG
+    console.log("cmd =", cmd);
+    xmlHttp.send( cmd );
 
 }
 function getPastData(code, birthYear) {
