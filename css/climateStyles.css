@@ -62,6 +62,13 @@ canvas {
     font-size: 2em;
     text-align: center;
 }
+#pastSubtitle,
+#futureSubtitle {
+    padding-left: 2%;
+}
+#presentSubtitle {
+    padding-right: 2%;
+}
 .footer {
     width: 90%;
     height: 20px;
@@ -96,7 +103,7 @@ canvas {
 #zoomOut,
 #refresh {
     position: fixed;
-    top: 78%;
+    top: 87%;
 }
 #play_pause {
     left: 47%;
@@ -129,4 +136,10 @@ input[type=range]::-webkit-slider-runnable-track {
     left: 45%;
     display: none;
     width: 10%;
+}
+.right p {
+    text-align: right;
+}
+.noPad {
+    padding: 0;
 }

@@ -1,5 +1,7 @@
 /**
  * Created by DrTone on 28/08/2014.
+   Edited 05/11/14
+   v1.2
  */
 
 //Temperature data
@@ -337,57 +339,24 @@ ClimateApp.prototype.init = function(container) {
     this.currentCamPath = 0;
     this.cameraTime = 0;
     this.tempVec = new THREE.Vector3();
-    this.camAnimating = false;
-    this.camAnimEnabled = true;
-    this.zoomInc = 5;
-    //Mouse over
-    this.mouseOverEnabled = true;
+    this.camAnimating = true;
 };
 
 ClimateApp.prototype.update = function() {
     //Perform any updates
-    BaseApp.prototype.update.call(this);
 
     //Animate geometry
     var delta = this.clock.getDelta();
 
-    //Perform mouse hover
-    var vector = new THREE.Vector3(( (this.mouse.endX-this.container.offsetLeft) / this.container.clientWidth ) * 2 - 1, -( (this.mouse.endY-this.container.offsetTop) / this.container.offsetHeight ) * 2 + 1, 0.5);
-    this.projector.unprojectVector(vector, this.camera);
-
-    var raycaster = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
-
-    this.hoverObjects.length = 0;
-    this.hoverObjects = raycaster.intersectObjects(this.scene.children, true);
-
-    //Perform hover actions
-    $('#info').hide();
-    if(this.mouseOverEnabled && this.hoverObjects.length != 0) {
-        for(var i=0; i<this.hoverObjects.length; ++i) {
-            var name = this.hoverObjects[i].object.name;
-            if(name.indexOf('glow') >= 0) {
-                var elem = $('#info');
-                elem.css('top', this.mouse.endY - 15);
-                elem.css('left', this.mouse.endX + 15);
-                elem.show();
-
-                elem.html(infoText.getText(name));
-                break;
-            }
-        }
-    }
-
     //Camera animation
-    if(this.camAnimEnabled) {
+    if(this.camAnimating) {
         this.cameraTime += delta;
     }
 
     var path = this.camPaths[this.currentCamPath];
 
-    if(this.cameraTime >= path.waitTime && this.camAnimEnabled) {
+    if(this.cameraTime >= path.waitTime && this.camAnimating) {
         //Start animating
-        this.camAnimating = true;
-        this.mouseOverEnabled = false;
         this.tempVec.copy(path.direction);
         this.tempVec.multiplyScalar(delta * this.camAnimSpeed);
         this.camera.position.add(this.tempVec);
@@ -442,6 +411,8 @@ ClimateApp.prototype.update = function() {
     }
 
     this.glowTime += 0.1;
+
+    BaseApp.prototype.update.call(this);
 };
 
 ClimateApp.prototype.createScene = function() {
@@ -456,10 +427,6 @@ ClimateApp.prototype.createScene = function() {
     var lineWidth = 5;
     var xStep = 10;
     var dataItems = 200;
-    //Group to hold all geometry
-    this.visGroup = new THREE.Object3D();
-    this.visGroup.name = 'visGroup';
-
     //Segments
     var segments = [];
     for(var i=0; i<dataItems; ++i) {
@@ -482,7 +449,7 @@ ClimateApp.prototype.createScene = function() {
     var zStart = -400;
     var positions = [];
     var normals = [];
-    var gap = 17;
+    var gap = 10;
     var distance = 40;
     for(var i=0; i<dataItems; ++i) {
         positions.push(new THREE.Vector3(xStart, yStart, zStart-5));
@@ -499,10 +466,10 @@ ClimateApp.prototype.createScene = function() {
     var scales = [];
     for(var i=0; i<dataItems/2; ++i) {
         var minYear = minYearly[i];
-        var minTemp = minYear[i+this.startYear];
+        var min = minYear[i+this.startYear];
         var maxYear = maxYearly[i];
-        var maxTemp = maxYear[i+this.startYear];
-        scales.push(minTemp, maxTemp);
+        var max = maxYear[i+this.startYear];
+        scales.push(min, max);
     }
 
     //Labels
@@ -516,7 +483,7 @@ ClimateApp.prototype.createScene = function() {
         labelPositions.push(avg);
     }
 
-    var endYear = this.startYear + (dataItems-1)/2;
+    var maxYear = this.startYear + (dataItems-1)/2;
     var labelColour = [255, 255, 255];
     var labelScale = new THREE.Vector3(75, 15, 1);
 
@@ -542,13 +509,13 @@ ClimateApp.prototype.createScene = function() {
     console.log('X = ', lineMesh.position.x);
     lineMesh.position.y = 171.5;
     lineMesh.position.z = zStart;
-    this.visGroup.add(lineMesh);
+    this.scene.add(lineMesh);
 
     //Add temperature geometries for each year
     var scaleFactor = 0.4;
     var tempYOffset = 21;
     var tempPosition = new THREE.Vector3();
-
+    //var glowMat = new THREE.MeshBasicMaterial( {color : 0xffff00});
     //Glow material for temperatures above threshold
     var _this = this;
 
@@ -558,7 +525,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowBlue.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowBlue.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -572,7 +539,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowRed.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowRed.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -584,28 +551,24 @@ ClimateApp.prototype.createScene = function() {
     //var texture = THREE.ImageUtils.loadTexture("images/glow.png");
     //this.glowMat = new THREE.MeshLambertMaterial({map: texture, transparent: true, opacity: 0.5});
 
-    for(var i= 0; i<dataItems; ++i) {
+    for(var i= 0, year=this.startYear; i<dataItems; ++i, ++year) {
 
         var glow = false;
-        var year = 0;
         if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
 
         if(glow) {
-            var glowGeom = new THREE.BoxGeometry(30, 5, 0.1);
+            var glowGeom = new THREE.BoxGeometry(50, 10, 0.1);
             var mat = this.glowMats[i%2];
-            //var mat = new THREE.MeshBasicMaterial( {color: 0xff0000});
             var glowMesh = new THREE.Mesh(glowGeom, mat);
-            glowMesh.position.x = positions[i].x+2;
-            var yOffset = i%2 ? 130 : 60;
+            glowMesh.position.x = positions[i].x;
+            var yOffset = i%2 ? 180 : 60;
             glowMesh.position.y = positions[i].y - yOffset;
             glowMesh.position.z = positions[i].z - 0.5;
             glowMesh.rotation.z = rotations[i];
             glowMesh.scale.x = scales[i] * scaleFactor * 3;
             glowMesh.scale.y *= 5;
             glowMesh.visible = false;
-            year = Math.floor(i/2) + this.startYear;
-            glowMesh.name = scales[i] <= minThresh ? 'glowCold'+year : 'glowWarm'+year;
-            this.visGroup.add(glowMesh);
+            this.scene.add(glowMesh);
         }
 
         vertices.length = 0;
@@ -633,7 +596,7 @@ ClimateApp.prototype.createScene = function() {
         lineMesh.position.z = positions[i].z;
         lineMesh.rotation.z = rotations[i];
         lineMesh.scale.x = scales[i] * scaleFactor;
-        this.visGroup.add(lineMesh);
+        this.scene.add(lineMesh);
 
 
         //Temperature labels
@@ -644,22 +607,13 @@ ClimateApp.prototype.createScene = function() {
         label.name = 'tempLabel'+i;
         label.visible = false;
         this.labels.push(label);
-        this.visGroup.add(label);
+        this.scene.add(label);
+
+        if(year < maxYear) {
+            var label = createLabel(year, labelPositions[i], labelScale, labelColour, 12, 1);
+            this.scene.add(label);
+        }
     }
-
-    //Labels
-    var label;
-    for(var year=this.startYear, i=0; year<endYear; ++year, ++i) {
-        label = createLabel(year, labelPositions[i], labelScale, labelColour, 12, 1);
-        this.visGroup.add(label);
-    }
-    //Add all geometry to main group
-    this.scene.add(this.visGroup);
-};
-
-ClimateApp.prototype.renderAll = function() {
-    //Render complete structure
-
 };
 
 ClimateApp.prototype.resetScene = function() {
@@ -680,86 +634,56 @@ ClimateApp.prototype.resetScene = function() {
     this.currentAnimation = 0;
     this.animating = true;
     this.animationTime = 0.01;
-    this.camAnimating = true;
-    this.cameraTime = 0;
-    this.totalDelta = 0;
-    $('#playToggle').attr('src', "images/pause.png");
 
     //Reset cam position
     this.camera.position.set(0, 0, 200);
     var lookAt = new THREE.Vector3();
     this.controls.setLookAt(lookAt);
-    this.visGroup.position.z = 0;
 };
 
-ClimateApp.prototype.togglePlay = function() {
-    //Toggle vis animation
-    this.camAnimEnabled = !this.camAnimEnabled;
-
-    //Alter button images
-    var image = $('#playToggle');
-    var imageSrc = this.camAnimEnabled ? 'images/pause.png' : 'images/play.png';
-    image.attr('src', imageSrc);
-    //See if we allow mouse overs
-    if(!this.camAnimEnabled || !this.camAnimating) {
-        this.mouseOverEnabled = true;
+ClimateApp.prototype.onVisChange = function() {
+    //Stop animations when page not visible
+    if (isHidden()) {
+        this.camAnimating = false;
+        this.animating = false;
     } else {
-        this.mouseOverEnabled = false;
-    }
-
-    //Render everything if paused
-    if(!this.camAnimEnabled) {
-        this.renderAll();
+        this.camAnimating = true;
+        this.animating = true;
     }
 };
 
-ClimateApp.prototype.zoomIn = function() {
-    //Zoom into scene
-    this.visGroup.position.z += this.zoomInc;
-};
-
-ClimateApp.prototype.zoomOut = function() {
-    //Zoom into scene
-    this.visGroup.position.z -= this.zoomInc;
-};
-
-ClimateApp.prototype.timeSlider = function(value) {
-    //Adjust slider
-    this.visGroup.position.x = -value;
-};
-
-var predict = null;
-var defaultPrediction = 'In 2045...';
 var date = null;
 var code = null;
 var validData = false;
 
 function onGetData() {
     //Validate data
-    predict = $('#promise').val();
-    if(predict === '' || predict === defaultPrediction) return 'badPromise';
-
     date = parseInt($('#dob').val());
+    //DEBUG
+    //console.log('DOB =', date);
 
     if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
 
-    //Allowable dates - October 2014 to December 2014
+    //Adjust these to October - set to September for testing
     var lower = Math.round(new Date(2014, 9, 1, 0, 0, 0).getTime()/1000);
     var upper = Math.round(new Date(2014, 11, 31, 23, 59, 59).getTime()/1000);
+    //DEBUG
+    console.log('Limits =', upper, lower);
 
     code = parseInt($('#timeStamp').val());
+    //DEBUG
+    //console.log('Time =', code);
 
     if(isNaN(code) || code < lower || code > upper) return 'badCode';
 
-    //Don't allow codes in the future
-    var now = Math.round(new Date().getTime()/1000);
-    if(code > now) return 'badCode';
-
-    //Options for users with no code - get data from 30 minutes ago
+    //Options for users with no code
+	var now = Math.round(new Date().getTime()/1000);
+	if(code > now) return 'badCode';
     if(code == lower) {
-        code = now - (60*30);
+        code = Math.round(new Date().getTime()/1000) - (60*30);
     }
 
+    console.log('Now =', code);
     validData = true;
 }
 
@@ -771,9 +695,31 @@ function displayError(msg) {
     }
 }
 
+function isHidden() {
+    var prop = getHiddenProp();
+    if (!prop) return false;
+
+    return document[prop];
+}
+
+function getHiddenProp(){
+    var prefixes = ['webkit','moz','ms','o'];
+
+    // if 'hidden' is natively supported just return it
+    if ('hidden' in document) return 'hidden';
+
+    // otherwise loop over all the known prefixes until we find one
+    for (var i = 0; i < prefixes.length; i++){
+        if ((prefixes[i] + 'Hidden') in document)
+            return prefixes[i] + 'Hidden';
+    }
+
+    // otherwise it's not supported
+    return null;
+}
+
 $(document).ready(function() {
     //GUI callbacks
-    $('#promise').val(defaultPrediction);
     $("#getData").on('click', function(evt) {
         var status = onGetData();
         if(validData) {
@@ -786,10 +732,6 @@ $(document).ready(function() {
 
                 case 'badCode':
                     displayError('Enter a valid prediction code');
-                    break;
-
-                case 'badPromise':
-                    displayError('You forgot to add your promise, wish or prediction!');
                     break;
 
                 default :
@@ -809,22 +751,13 @@ $(document).ready(function() {
         app.init(container);
         app.createScene();
 
-        //GUI callbacks
-        $("#play_pause").on('click', function() {
-            app.togglePlay();
-        });
-        $("#zoomIn").on('click', function() {
-            app.zoomIn();
-        });
-        $("#zoomOut").on('click', function() {
-            app.zoomOut();
-        });
-        $("#refresh").on('click', function() {
-            app.resetScene();
-        });
-        $("#timeLine").on('input', function() {
-            app.timeSlider(this.value);
-        });
+        var visProp = getHiddenProp();
+        if (visProp) {
+            var evtname = visProp.replace(/[H|h]idden/,'') + 'visibilitychange';
+            document.addEventListener(evtname, function() {
+                app.onVisChange();
+            });
+        }
 
         app.run();
     }
