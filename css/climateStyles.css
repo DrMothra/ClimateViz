@@ -96,32 +96,11 @@ canvas {
     width: 2%;
 }
 .controlButtons img {
-    width: 90%;
-}
-#play_pause,
-#zoomIn,
-#zoomOut,
-#refresh {
-    position: fixed;
-    top: 87%;
-}
-#play_pause {
-    left: 47%;
-}
-#zoomIn {
-    left: 50%;
-}
-#zoomOut {
-    left: 53%;
-}
-#refresh {
-    left: 56%;
-}
-#timeLine {
-    width: 30%;
+    width: 100%;
 }
 input[type=range]{
     -webkit-appearance: none;
+    width: 60%;
 }
 input[type=range]::-webkit-slider-runnable-track {
     background: #717171;

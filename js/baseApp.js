@@ -45,7 +45,7 @@ BaseApp.prototype.createRenderer = function() {
         // do IE-specific things
         width = window.innerWidth;
     }
-    this.renderer.setSize(width, window.innerHeight*0.6);
+    this.renderer.setSize(width, window.innerHeight*0.5);
     this.container.appendChild( this.renderer.domElement );
     var _this = this;
 

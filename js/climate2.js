@@ -337,7 +337,8 @@ ClimateApp.prototype.init = function(container) {
     this.currentCamPath = 0;
     this.cameraTime = 0;
     this.tempVec = new THREE.Vector3();
-    this.animEnabled = true;
+    this.camAnimating = false;
+    this.camAnimEnabled = true;
     this.zoomInc = 5;
     //Mouse over
     this.mouseOverEnabled = true;
@@ -377,15 +378,15 @@ ClimateApp.prototype.update = function() {
     }
 
     //Camera animation
-    if(this.animEnabled) {
+    if(this.camAnimEnabled) {
         this.cameraTime += delta;
-        this.totalDelta += delta;
     }
 
     var path = this.camPaths[this.currentCamPath];
 
-    if(this.cameraTime >= path.waitTime && this.animEnabled) {
+    if(this.cameraTime >= path.waitTime && this.camAnimEnabled) {
         //Start animating
+        this.camAnimating = true;
         this.mouseOverEnabled = false;
         this.tempVec.copy(path.direction);
         this.tempVec.multiplyScalar(delta * this.camAnimSpeed);
@@ -402,8 +403,11 @@ ClimateApp.prototype.update = function() {
     }
 
     var attachedGeom = null;
+    if(this.animating) {
+        this.totalDelta += delta;
+    }
 
-    if(this.totalDelta >= this.animationTime && this.animEnabled) {
+    if(this.totalDelta >= this.animationTime && this.animating) {
         this.totalDelta = 0;
         //Adjust indices
         var geom = this.animationGeoms[this.currentAnimation];
@@ -554,7 +558,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowBlue.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowBlue.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -568,7 +572,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowRed.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowRed.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -653,27 +657,6 @@ ClimateApp.prototype.createScene = function() {
     this.scene.add(this.visGroup);
 };
 
-ClimateApp.prototype.renderAllGeometry = function(visible, animations) {
-    //Render complete structure
-    var geom;
-    var length = animations != undefined ? animations : this.animationGeoms.length;
-    for(var i=0; i<length; ++i) {
-        geom = this.animationGeoms[i];
-        geom.offsets = [ { start: 0, count: visible ? geom.attributes.index.array.length : 0, index: 0 } ];
-        geom.attachedGeom ? geom.attachedGeom.visible = visible : null;
-        //Labels
-        if(i>0) {
-            this.labels[i-1].visible = visible;
-        }
-    }
-};
-
-ClimateApp.prototype.restartGeometry = function() {
-    //Resume geometry rendering from previous point
-    this.renderAllGeometry(false);
-    this.renderAllGeometry(true, this.currentAnimation);
-};
-
 ClimateApp.prototype.resetScene = function() {
     //Reset all geom offsets
     for(var i=0; i<this.animationGeoms.length; ++i) {
@@ -706,17 +689,19 @@ ClimateApp.prototype.resetScene = function() {
 
 ClimateApp.prototype.togglePlay = function() {
     //Toggle vis animation
-    this.animEnabled = !this.animEnabled;
+    this.camAnimEnabled = !this.camAnimEnabled;
 
     //Alter button images
     var image = $('#playToggle');
-    var imageSrc = this.animEnabled ? 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/pause.png' : 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/play.png';
+    var imageSrc = this.camAnimEnabled ? 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/pause.png' : 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/play.png';
     image.attr('src', imageSrc);
     //See if we allow mouse overs
-    this.mouseOverEnabled = !this.animEnabled;
+    if(!this.camAnimEnabled || !this.camAnimating) {
+        this.mouseOverEnabled = true;
+    } else {
+        this.mouseOverEnabled = false;
+    }
 
-    //Render everything if paused
-    !this.animEnabled ? this.renderAllGeometry(true) : this.restartGeometry();
 };
 
 ClimateApp.prototype.zoomIn = function() {
