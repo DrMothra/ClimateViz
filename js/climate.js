@@ -354,6 +354,9 @@ ClimateApp.prototype.update = function() {
     var vector = new THREE.Vector3(( (this.mouse.endX-this.container.offsetLeft) / this.container.clientWidth ) * 2 - 1, -( (this.mouse.endY-this.container.offsetTop) / this.container.offsetHeight ) * 2 + 1, 0.5);
     this.projector.unprojectVector(vector, this.camera);
 
+    //DEBUG
+    console.log("X = ", this.container.offsetLeft);
+
     var raycaster = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
 
     this.hoverObjects.length = 0;
@@ -403,7 +406,7 @@ ClimateApp.prototype.update = function() {
 
     var attachedGeom = null;
 
-    if(this.totalDelta >= this.animationTime && this.animEnabled) {
+    if(this.totalDelta >= this.animationTime && this.animEnabled && this.currentAnimation >=0) {
         this.totalDelta = 0;
         //Adjust indices
         var geom = this.animationGeoms[this.currentAnimation];
@@ -427,7 +430,7 @@ ClimateApp.prototype.update = function() {
 
             ++this.currentAnimation;
             attachedGeom = null;
-            if(this.currentAnimation >= this.animationGeoms.length) this.animating = false;
+            if(this.currentAnimation >= this.animationGeoms.length) this.currentAnimation = -1;
             if(this.currentAnimation >= 1) this.animationTime = 0.1;
             this.lastIndexPos = 0;
         }
@@ -554,7 +557,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowBlue.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowBlue.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -568,7 +571,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowRed.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowRed.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,

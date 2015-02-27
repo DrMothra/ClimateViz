@@ -614,8 +614,8 @@ function getPastData(code, birthYear) {
 
 $(document).ready(function() {
 
-    var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_4', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
-        'measurement_container/wp_ekx42t_1_ts_temperature_14', 'measurement_container/wp_ekx42t_1_ts_messages_24'];
+    var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_16', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
+        'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement_container/wp_ekx42t_1_ts_messages_24'];
     var dob = parseParams('dob', window.location.search);
     console.log('DOB =', dob);
 
