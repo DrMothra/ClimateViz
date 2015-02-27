@@ -484,28 +484,28 @@ function updateTempImage(value, container) {
     var image = $('#'+container+'Image');
     switch(temp) {
         case HEATWAVE:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/heatwave_sketch.png');
+            image.attr('src', 'images/heatwave_sketch.png');
             break;
         case HOT:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/hot_sketch.png');
+            image.attr('src', 'images/hot_sketch.png');
             break;
         case WARM:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/warm_sketch.png');
+            image.attr('src', 'images/warm_sketch.png');
             break;
         case MILD:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/mild_sketch.png');
+            image.attr('src', 'images/mild_sketch.png');
             break;
         case COLD:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/cold_sketch.png');
+            image.attr('src', 'images/cold_sketch.png');
             break;
         case FREEZING:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/freezing_sketch.png');
+            image.attr('src', 'images/freezing_sketch.png');
             break;
         case ARCTIC:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/arctic_sketch.png');
+            image.attr('src', 'images/arctic_sketch.png');
             break;
         case null:
-            image.attr('src', 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/error.png');
+            image.attr('src', 'images/error.png');
             break;
         default:
             console.log('Invalid temperature');
@@ -629,4 +629,9 @@ $(document).ready(function() {
         //sendTimestreamData(measurements[3]);
         getPastData(code, dob);
     }
+
+    //GUI Callbacks
+    $('#back').on('click', function() {
+
+    });
 });

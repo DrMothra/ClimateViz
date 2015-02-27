@@ -20,7 +20,7 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 }
 
 body {
-    font-family: Helvetica, Arial, sans-serif;
+    font-family: Georgia, Arial, Helvetica, sans-serif;
 }
 canvas {
     border-radius: 15px;
@@ -35,6 +35,9 @@ canvas {
 .centred {
     text-align: center;
 }
+.autoCentred {
+    margin: 0 auto;
+}
 .fullWidth {
     width: 100%;
 }
@@ -44,12 +47,20 @@ canvas {
     top: 10%;
     left: 2%;
 }
-
+.banner {
+    margin: 2% 2% 1% 1%;
+}
+.sandy {
+    background-image: url("../images/sandyBackground.jpg");
+}
 .weather img {
     height: 80%;
     width: 70%;
 }
-
+.weather p {
+    margin: 1% 0;
+    line-height: 150%;
+}
 #weatherViz {
     background-color: #f4eede;
 }
@@ -100,11 +111,38 @@ canvas {
 }
 input[type=range]{
     -webkit-appearance: none;
-    width: 60%;
+    width: 80%;
 }
 input[type=range]::-webkit-slider-runnable-track {
     background: #717171;
     height: 10px;
+}
+input[type=text] {
+    width: 25%;
+    transform: scaleY(1.5);
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #666;
+    border: 1px solid #271d1b;
+    padding: 5px;
+    letter-spacing: -1px;
+}
+input[type=button] {
+    background: #271d1b;
+    border: 1px solid #271d1b;
+    color: #ffffff;
+    font-size: 1.1em;
+    padding: 2px 12px;
+    font-weight: bold;
+    letter-spacing: -1px;
+    transform: scaleY(1.7);
+}
+input[type=number] {
+    transform: scaleY(1.5);
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #666;
+    border: 1px solid #271d1b;
 }
 #info {
     padding: 2%;
@@ -121,4 +159,49 @@ input[type=range]::-webkit-slider-runnable-track {
 }
 .noPad {
     padding: 0;
+}
+#promiseTitle,
+#predictionTitle {
+    margin: 5% 0;
+    font-weight: bold;
+    font-size: 2em;
+    font-family: birch-std;
+    text-shadow: 2px 2px 0 rgba(185, 173, 170, 0.4);
+    transform: scaleY(1.5);
+}
+#footerSocial {
+    font-size: 1.5em;
+}
+#footerSocial ul li {
+    display: inline;
+}
+#footerLinks {
+    margin-top: 2%;
+    font-size: 0.75em;
+}
+#footerLinks ul li {
+    display: inline;
+}
+#formPredict {
+    line-height: 200%;
+}
+#formPredict p {
+    margin: 0.7% auto;
+}
+#instruct {
+    width: 30%;
+}
+#footerImage {
+    background-image: url("../images/footerClouds.png");
+}
+#predictContainer {
+    width: 80%;
+}
+#predictThanks {
+    margin-bottom: 2%;
+}
+#back,
+#next {
+    border: none;
+    background: transparent;
 }

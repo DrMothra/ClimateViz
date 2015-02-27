@@ -395,6 +395,8 @@ ClimateApp.prototype.update = function() {
         this.camera.position.add(this.tempVec);
         this.controls.setLookAt(this.controls.getLookAt().add(this.tempVec));
         this.tempVec.subVectors(path.endPos, this.camera.position);
+        //Update slider
+        $('#timeLine').val(4000);
         if(this.camera.position.distanceTo(path.endPos) <= this.camMargin) {
             this.cameraTime = 0;
             if(++this.currentCamPath >= this.camPaths.length) {
@@ -557,7 +559,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowBlue.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowBlue.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -571,7 +573,7 @@ ClimateApp.prototype.createScene = function() {
             uniforms:
             {
                 "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/glowRed.png") }
+                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowRed.png") }
             },
             vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
             fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
@@ -579,9 +581,6 @@ ClimateApp.prototype.createScene = function() {
         }
     );
     this.glowMats.push(glowRedMat);
-
-    //var texture = THREE.ImageUtils.loadTexture("images/glow.png");
-    //this.glowMat = new THREE.MeshLambertMaterial({map: texture, transparent: true, opacity: 0.5});
 
     for(var i= 0; i<dataItems; ++i) {
 
@@ -698,7 +697,7 @@ ClimateApp.prototype.resetScene = function() {
     this.camAnimating = true;
     this.cameraTime = 0;
     this.totalDelta = 0;
-    $('#playToggle').attr('src', "http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/pause.png");
+    $('#playToggle').attr('src', "images/pause.png");
 
     //Reset cam position
     this.camera.position.set(0, 0, 200);
@@ -713,7 +712,7 @@ ClimateApp.prototype.togglePlay = function() {
 
     //Alter button images
     var image = $('#playToggle');
-    var imageSrc = this.animEnabled ? 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/pause.png' : 'http://timestreams.org.uk/wp-content/themes/tpm_timestreams_v1.2/images/play.png';
+    var imageSrc = this.animEnabled ? 'images/pause.png' : 'images/play.png';
     image.attr('src', imageSrc);
     //See if we allow mouse overs
     this.mouseOverEnabled = !this.animEnabled;
@@ -737,76 +736,7 @@ ClimateApp.prototype.timeSlider = function(value) {
     this.visGroup.position.x = -value;
 };
 
-var predict = null;
-var defaultPrediction = 'In 2045...';
-var date = null;
-var code = null;
-var validData = false;
-
-function onGetData() {
-    //Validate data
-    predict = $('#promise').val();
-    if(predict === '' || predict === defaultPrediction) return 'badPromise';
-
-    date = parseInt($('#dob').val());
-
-    if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
-
-    //Allowable dates - October 2014 to December 2014
-    var lower = Math.round(new Date(2014, 9, 1, 0, 0, 0).getTime()/1000);
-    var upper = Math.round(new Date(2014, 11, 31, 23, 59, 59).getTime()/1000);
-
-    code = parseInt($('#timeStamp').val());
-
-    if(isNaN(code) || code < lower || code > upper) return 'badCode';
-
-    //Don't allow codes in the future
-    var now = Math.round(new Date().getTime()/1000);
-    if(code > now) return 'badCode';
-
-    //Options for users with no code - get data from 30 minutes ago
-    if(code == lower) {
-        code = now - (60*30);
-    }
-
-    validData = true;
-}
-
-function displayError(msg) {
-    //Display error message
-    var output = $('#msgOutput');
-    if(output) {
-        output.html(msg);
-    }
-}
-
 $(document).ready(function() {
-    //GUI callbacks
-    $('#promise').val(defaultPrediction);
-    $("#getData").on('click', function(evt) {
-        var status = onGetData();
-        if(validData) {
-            window.open('http://www.timestreams.org.uk/weather/?dob='+date+'&code='+code, '_self');
-        } else {
-            switch (status) {
-                case 'badDate':
-                    displayError('Enter a correct birth year');
-                    break;
-
-                case 'badCode':
-                    displayError('Enter a valid prediction code');
-                    break;
-
-                case 'badPromise':
-                    displayError('You forgot to add your promise, wish or prediction!');
-                    break;
-
-                default :
-                    displayError('Incorrect numbers - try again');
-            }
-        }
-    });
-
     //Initialise app
     var glSupport = $('#webGLError');
     glSupport.hide();

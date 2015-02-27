@@ -19,6 +19,8 @@ function BaseApp() {
     this.startTime = 0;
     this.elapsedTime = 0;
     this.clock = new THREE.Clock();
+    this.widthScaleFactor = 0.95;
+    this.heightScaleFactor = 0.5;
 }
 
 BaseApp.prototype.init = function(container) {
@@ -45,7 +47,7 @@ BaseApp.prototype.createRenderer = function() {
         // do IE-specific things
         width = window.innerWidth;
     }
-    this.renderer.setSize(width, window.innerHeight*0.5);
+    this.renderer.setSize(width*this.widthScaleFactor, window.innerHeight*this.heightScaleFactor);
     this.container.appendChild( this.renderer.domElement );
     var _this = this;
 
@@ -109,10 +111,10 @@ BaseApp.prototype.mouseMoved = function(event) {
 
 BaseApp.prototype.windowResize = function(event) {
     //Handle window resize
-    this.camera.aspect = this.container.clientWidth / window.innerHeight*0.5;
+    this.camera.aspect = this.container.clientWidth*this.widthScaleFactor / window.innerHeight*this.heightScaleFactor;
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setSize( this.container.clientWidth, window.innerHeight*0.5 );
+    this.renderer.setSize( this.container.clientWidth*this.widthScaleFactor, window.innerHeight*this.heightScaleFactor );
     //console.log('Size =', )
 };
 
