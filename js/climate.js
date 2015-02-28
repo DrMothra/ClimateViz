@@ -303,44 +303,18 @@ ClimateApp.prototype.init = function(container) {
     this.glowTime = 0;
 
     //Camera animation
-    this.camAnimLength = 3375;
-    this.camAnimSpeed = 32;
-    this.camMargin = 10;
-
-    var startPositions = [];
-    var endPositions = [];
-    var camWaitTimes = [34, 5];
-    if(window.outerWidth <= 1280) {
-        camWaitTimes[0] = 27;
-        this.camAnimSpeed = 32;
-        this.camAnimLength = 3700;
-    }
-    this.camPaths = [];
-    //Phase 1
-    var camX = this.camera.position.x;
-    var camY = this.camera.position.y;
-    var camZ = this.camera.position.z;
-    startPositions.push(new THREE.Vector3(camX, camY, camZ));
-    endPositions.push(new THREE.Vector3(camX+this.camAnimLength, camY, camZ));
-
-    //Phase 2
-    startPositions.push(new THREE.Vector3(camX+this.camAnimLength, camY, camZ));
-    endPositions.push(new THREE.Vector3(1510, -170, 2360));
-
-    for(var i=0; i<startPositions.length; ++i) {
-        var dirVec = new THREE.Vector3();
-        dirVec.subVectors(endPositions[i], startPositions[i]);
-        var pathProps = { waitTime : camWaitTimes[i], direction : dirVec.normalize(), endPos : endPositions[i] };
-        this.camPaths.push(pathProps);
-    }
+    this.animLength = 3375;
+    this.animSpeed = 32;
+    this.animMargin = 10;
+    this.previousGroupPos = new THREE.Vector3();
 
     this.currentCamPath = 0;
-    this.cameraTime = 0;
+    this.moveTime = 0;
     this.tempVec = new THREE.Vector3();
     this.animEnabled = true;
     this.zoomInc = 5;
     //Mouse over
-    this.mouseOverEnabled = true;
+    this.mouseOverEnabled = false;
 };
 
 ClimateApp.prototype.update = function() {
@@ -351,11 +325,11 @@ ClimateApp.prototype.update = function() {
     var delta = this.clock.getDelta();
 
     //Perform mouse hover
-    var vector = new THREE.Vector3(( (this.mouse.endX-this.container.offsetLeft) / this.container.clientWidth ) * 2 - 1, -( (this.mouse.endY-this.container.offsetTop) / this.container.offsetHeight ) * 2 + 1, 0.5);
+    var vector = new THREE.Vector3(( (this.mouse.endX-this.container.offsetLeft) / (this.container.clientWidth*this.widthScaleFactor) ) * 2 - 1, -( (this.mouse.endY-this.container.offsetTop) / this.container.offsetHeight ) * 2 + 1, 0.5);
     this.projector.unprojectVector(vector, this.camera);
 
     //DEBUG
-    console.log("X = ", this.container.offsetLeft);
+    //console.log("X = ", this.mouse.endX);
 
     var raycaster = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
 
@@ -365,6 +339,9 @@ ClimateApp.prototype.update = function() {
     //Perform hover actions
     $('#info').hide();
     if(this.mouseOverEnabled && this.hoverObjects.length != 0) {
+        //DEBUG
+        console.log("Hovered");
+
         for(var i=0; i<this.hoverObjects.length; ++i) {
             var name = this.hoverObjects[i].object.name;
             if(name.indexOf('glow') >= 0) {
@@ -381,24 +358,23 @@ ClimateApp.prototype.update = function() {
 
     //Camera animation
     if(this.animEnabled) {
-        this.cameraTime += delta;
+        this.moveTime += delta;
         this.totalDelta += delta;
     }
 
     var path = this.camPaths[this.currentCamPath];
 
-    if(this.cameraTime >= path.waitTime && this.animEnabled) {
+    if(this.moveTime >= path.waitTime && this.animEnabled) {
         //Start animating
         this.mouseOverEnabled = false;
         this.tempVec.copy(path.direction);
-        this.tempVec.multiplyScalar(delta * this.camAnimSpeed);
-        this.camera.position.add(this.tempVec);
-        this.controls.setLookAt(this.controls.getLookAt().add(this.tempVec));
-        this.tempVec.subVectors(path.endPos, this.camera.position);
+        this.tempVec.multiplyScalar(delta * this.animSpeed);
+        this.visGroup.position.add(this.tempVec);
+        this.tempVec.subVectors(path.endPos, this.visGroup.position);
         //Update slider
-        $('#timeLine').val(4000);
-        if(this.camera.position.distanceTo(path.endPos) <= this.camMargin) {
-            this.cameraTime = 0;
+        $('#timeLine').val(-this.visGroup.position.x);
+        if(this.visGroup.position.distanceTo(path.endPos) <= this.animMargin) {
+            this.moveTime = 0;
             if(++this.currentCamPath >= this.camPaths.length) {
                 this.currentCamPath = 0;
                 this.resetScene();
@@ -531,7 +507,7 @@ ClimateApp.prototype.createScene = function() {
     lineGeom.attachedGeom = null;
     lineGeom.dynamic = true;
     lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-    var lineMat = new THREE.MeshBasicMaterial( {color : 0xffffff} );
+    var lineMat = new THREE.MeshLambertMaterial( {color : 0xffffff} );
     lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
     lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
     lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
@@ -653,12 +629,40 @@ ClimateApp.prototype.createScene = function() {
     }
     //Add all geometry to main group
     this.scene.add(this.visGroup);
+
+    //Animations
+    var startPositions = [];
+    var endPositions = [];
+    var camWaitTimes = [34, 5];
+    if(window.outerWidth <= 1280) {
+        camWaitTimes[0] = 45;
+        this.animSpeed = 32;
+        this.animLength = 3700;
+    }
+    this.camPaths = [];
+    //Phase 1
+    var groupX = this.visGroup.position.x;
+    var groupY = this.visGroup.position.y;
+    var groupZ = this.visGroup.position.z;
+    startPositions.push(new THREE.Vector3(groupX, groupY, groupZ));
+    endPositions.push(new THREE.Vector3(groupX-this.animLength, groupY, groupZ));
+
+    //Phase 2
+    startPositions.push(new THREE.Vector3(groupX-this.animLength, groupY, groupZ));
+    endPositions.push(new THREE.Vector3(-1510, 170, -2360));
+
+    for(var i=0; i<startPositions.length; ++i) {
+        var dirVec = new THREE.Vector3();
+        dirVec.subVectors(endPositions[i], startPositions[i]);
+        var pathProps = { waitTime : camWaitTimes[i], direction : dirVec.normalize(), endPos : endPositions[i] };
+        this.camPaths.push(pathProps);
+    }
 };
 
 ClimateApp.prototype.renderAllGeometry = function(visible, animations) {
     //Render complete structure
     var geom;
-    var length = animations != undefined ? animations : this.animationGeoms.length;
+    var length = animations != undefined ? (animations < 0 ? this.animationGeoms.length : animations) : this.animationGeoms.length;
     for(var i=0; i<length; ++i) {
         geom = this.animationGeoms[i];
         geom.offsets = [ { start: 0, count: visible ? geom.attributes.index.array.length : 0, index: 0 } ];
@@ -674,6 +678,8 @@ ClimateApp.prototype.restartGeometry = function() {
     //Resume geometry rendering from previous point
     this.renderAllGeometry(false);
     this.renderAllGeometry(true, this.currentAnimation);
+    this.visGroup.position.set(this.previousGroupPos.x, this.previousGroupPos.y, this.previousGroupPos.z);
+    $('#timeLine').val(this.visGroup.position.x);
 };
 
 ClimateApp.prototype.resetScene = function() {
@@ -695,21 +701,22 @@ ClimateApp.prototype.resetScene = function() {
     this.animating = true;
     this.animationTime = 0.01;
     this.camAnimating = true;
-    this.cameraTime = 0;
+    this.moveTime = 0;
     this.totalDelta = 0;
     $('#playToggle').attr('src', "images/pause.png");
+    $('#timeLine').val(-3500);
 
     //Reset cam position
-    this.camera.position.set(0, 0, 200);
-    var lookAt = new THREE.Vector3();
-    this.controls.setLookAt(lookAt);
-    this.visGroup.position.z = 0;
+    this.visGroup.position.set(0, 0, 0);
 };
 
 ClimateApp.prototype.togglePlay = function() {
     //Toggle vis animation
     this.animEnabled = !this.animEnabled;
 
+    if(!this.animEnabled) {
+        this.previousGroupPos.copy(this.visGroup.position);
+    }
     //Alter button images
     var image = $('#playToggle');
     var imageSrc = this.animEnabled ? 'images/pause.png' : 'images/play.png';
@@ -732,8 +739,10 @@ ClimateApp.prototype.zoomOut = function() {
 };
 
 ClimateApp.prototype.timeSlider = function(value) {
-    //Adjust slider
-    this.visGroup.position.x = -value;
+    //Adjust slider if allowed
+    if(!this.animEnabled) {
+        this.visGroup.position.x = -value;
+    }
 };
 
 $(document).ready(function() {
