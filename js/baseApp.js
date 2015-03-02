@@ -40,12 +40,17 @@ BaseApp.prototype.createRenderer = function() {
     this.renderer = new THREE.WebGLRenderer( {antialias : true});
     this.renderer.setClearColor(0x000000, 1.0);
     this.renderer.shadowMapEnabled = true;
-    var isMSIE = /*@cc_on!@*/0;
+    var ua = window.navigator.userAgent;
+    console.log(ua);
+    this.isIE = ua.indexOf("Trident") >= 0;
+
+    console.log("IE? =", this.isIE);
 
     var width = this.container.clientWidth;
-    if (isMSIE) {
+    if (this.isIE) {
         // do IE-specific things
         width = window.innerWidth;
+        console.log("IE width =", width);
     }
     this.renderer.setSize(width*this.widthScaleFactor, window.innerHeight*this.heightScaleFactor);
     this.container.appendChild( this.renderer.domElement );

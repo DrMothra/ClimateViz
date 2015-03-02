@@ -18,11 +18,11 @@ function onGetData() {
 
     date = parseInt($('#dob').val());
 
-    if(isNaN(date) || date < 1914 || date > 2014) return 'badDate';
+    if(isNaN(date) || date < 1914 || date > 2015) return 'badDate';
 
-    //Allowable dates - October 2014 to December 2014
+    //Allowable dates - October 2014 to March 2015
     var lower = Math.round(new Date(2014, 9, 1, 0, 0, 0).getTime()/1000);
-    var upper = Math.round(new Date(2014, 11, 31, 23, 59, 59).getTime()/1000);
+    var upper = Math.round(new Date(2015, 2, 31, 23, 59, 59).getTime()/1000);
 
     code = parseInt($('#timeStamp').val());
 
@@ -48,17 +48,16 @@ function displayError(msg) {
     }
 }
 
-
-
-
+var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
 
 $(document).ready(function() {
     //GUI callbacks
-    $('#promise').val(defaultPrediction);
+    var predictText = $('#promise');
+    predictText.val(defaultPrediction);
     $("#getData").on('click', function (evt) {
         var status = onGetData();
         if (validData) {
-            window.open('predictions.html?dob=' + date + '&code=' + code, '_self');
+            window.open('predictions.html?dob=' + date + '&code=' + code + '&predict=' + predict, '_self');
         } else {
             switch (status) {
                 case 'badDate':

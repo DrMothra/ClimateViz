@@ -459,6 +459,19 @@ function parseParams(param, paramText) {
     return null;
 }
 
+function parseTextParams(param, paramText) {
+    //Parse text for required parameters
+    param += '=';
+    var index = paramText.indexOf(param);
+    console.log('Index =', index);
+    if(index >= 0) {
+        index += param.length;
+        return paramText.substr(index);
+    }
+
+    return null;
+}
+
 function getValue(response) {
     //Get temperature value from response
     var data = JSON.parse(response);
@@ -557,9 +570,9 @@ function getTimestreamData(dob, code, measure, container) {
     xmlHttp.send( null );
 }
 
-function sendTimestreamData(measure) {
+function sendTimestreamData(text, measure) {
     //Construct http request
-    /*
+
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
@@ -581,29 +594,30 @@ function sendTimestreamData(measure) {
     xmlHttp.open( "POST", url, true );
     xmlHttp.setRequestHeader("Accept","application/json");
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    var cmd =
-    //xmlHttp.setRequestHeader("Content-Length", 10);
+    var cmd = 'value='+text+'&pubkey='+publicKey+'&now='+timeStamp;
+
     //DEBUG
     console.log("cmd =", cmd);
     xmlHttp.send( cmd );
-    */
-    var url = remoteURL + measure;
-    var publicKey = 'c9bcd7f338';
-    var timeStamp = Math.round(Date.now() / 1000);
-    var cmd = "value=tony"+"&pubkey="+publicKey+"&now="+timeStamp;
-    $.ajax({
-            type: "POST",
-            url: url,
-            contentType: "application/x-www-form-urlencoded",
-            data: cmd,
-            success: function(data, textStatus, jqXHR) {
-                console.log('Success');
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log("Error occurred");
-            }
-        }
-    )
+
+    /*
+     var url = remoteURL + measure;
+     var publicKey = 'c9bcd7f338';
+     var timeStamp = Math.round(Date.now() / 1000);
+     var cmd = encodeURIComponent("pubkey="+publicKey+"&now="+timeStamp+"&value=tony");
+     $.ajax({
+     type: "POST",
+     url: url,
+     data: cmd,
+     success: function(data, textStatus, jqXHR) {
+     console.log('Success');
+     },
+     error: function(jqXHR, textStatus, errorThrown) {
+     console.log("Error occurred");
+     }
+     }
+     )
+     */
 }
 
 function getPastData(code, birthYear) {
@@ -633,25 +647,28 @@ function getPastData(code, birthYear) {
 }
 
 $(document).ready(function() {
+    //Only stay on page fixed time
+    var timeOut_s = 90;
+    setTimeout(function() {
+        window.open('promises.html', '_self');
+    }, timeOut_s * 1000);
 
     var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_16', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
-        'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement_container/wp_ekx42t_1_ts_messages_24'];
+        'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement/wp_ekx42t_1_ts_messages_24'];
     var dob = parseParams('dob', window.location.search);
     console.log('DOB =', dob);
 
     var code = parseParams('code', window.location.search);
     console.log('Code =', code);
 
+    var predictText = parseTextParams('predict', window.location.search);
+    console.log('PredictText =', predictText);
+
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
-        //getTimestreamData(dob, code, measurements[1], 'precipitationPresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
-        sendTimestreamData(measurements[3]);
+        sendTimestreamData(predictText, measurements[3]);
         getPastData(code, dob);
     }
 
-    //GUI Callbacks
-    $('#back').on('click', function() {
-
-    });
 });

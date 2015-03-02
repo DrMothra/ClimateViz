@@ -287,9 +287,12 @@ function ClimateApp() {
 
 ClimateApp.prototype = new BaseApp();
 
-ClimateApp.prototype.init = function(container) {
+ClimateApp.prototype.init = function(container, iPad) {
     BaseApp.prototype.init.call(this, container);
     this.guiControls = null;
+
+    //Platform specific
+    this.isiPad = iPad;
 
     //Time data
     this.startYear = 1914;
@@ -302,11 +305,12 @@ ClimateApp.prototype.init = function(container) {
     this.currentAnimation = 0;
     this.glowTime = 0;
 
-    //Camera animation
+    //Geometry animation
     this.animLength = 3375;
     this.animSpeed = 32;
     this.animMargin = 10;
     this.previousGroupPos = new THREE.Vector3();
+    this.segmentsPerPass = 6;
 
     this.currentCamPath = 0;
     this.moveTime = 0;
@@ -392,7 +396,7 @@ ClimateApp.prototype.update = function() {
             attachedGeom = geom.attachedGeom;
         }
         var length = geom.attributes.index.array.length;
-        this.lastIndexPos += 6;
+        this.lastIndexPos += this.isiPad ? length/2 : this.segmentsPerPass;
         if(this.lastIndexPos <= length) {
             geom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
         } else {
@@ -634,9 +638,9 @@ ClimateApp.prototype.createScene = function() {
     var startPositions = [];
     var endPositions = [];
     var camWaitTimes = [34, 5];
-    if(window.outerWidth <= 1280) {
-        camWaitTimes[0] = 45;
-        this.animSpeed = 32;
+    if(this.isiPad) {
+        camWaitTimes[0] = 3;
+        this.animSpeed = 50;
         this.animLength = 3700;
     }
     this.camPaths = [];
@@ -740,12 +744,31 @@ ClimateApp.prototype.zoomOut = function() {
 
 ClimateApp.prototype.timeSlider = function(value) {
     //Adjust slider if allowed
+    //DEBUG
+    console.log("IE =", value);
     if(!this.animEnabled) {
         this.visGroup.position.x = -value;
     }
 };
 
 $(document).ready(function() {
+    //See if we are ipad
+    var isiPad = false;
+    var plat = navigator.platform;
+
+    if(plat === 'iPad') {
+        isiPad = true;
+    }
+
+    //Only stay on page for fixed time
+    //DEBUG
+    /*
+    var timeOut_s = 90;
+    setTimeout(function() {
+        window.open('promises.html', '_self');
+    }, timeOut_s * 1000);
+    */
+
     //Initialise app
     var glSupport = $('#webGLError');
     glSupport.hide();
@@ -754,7 +777,7 @@ $(document).ready(function() {
     } else {
         var container = document.getElementById("WebGL-output");
         var app = new ClimateApp();
-        app.init(container);
+        app.init(container, isiPad);
         app.createScene();
 
         //GUI callbacks
@@ -770,9 +793,16 @@ $(document).ready(function() {
         $("#refresh").on('click', function() {
             app.resetScene();
         });
-        $("#timeLine").on('input', function() {
-            app.timeSlider(this.value);
-        });
+        if(app.isIE) {
+            $("#timeLine").on('change', function() {
+                app.timeSlider(this.value);
+            });
+        } else {
+            $("#timeLine").on('input', function() {
+                app.timeSlider(this.value);
+            });
+        }
+
 
         app.run();
     }
