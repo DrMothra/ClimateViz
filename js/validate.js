@@ -2,9 +2,6 @@
  * Created by DrTone on 27/02/2015.
  */
 //Validate the prediction input
-
-
-
 var predict = null;
 var defaultPrediction = 'In 2045...';
 var date = null;
@@ -47,8 +44,6 @@ function displayError(msg) {
         output.html(msg);
     }
 }
-
-var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
 
 $(document).ready(function() {
     //GUI callbacks

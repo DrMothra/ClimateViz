@@ -344,7 +344,7 @@ ClimateApp.prototype.update = function() {
     $('#info').hide();
     if(this.mouseOverEnabled && this.hoverObjects.length != 0) {
         //DEBUG
-        console.log("Hovered");
+        //console.log("Hovered");
 
         for(var i=0; i<this.hoverObjects.length; ++i) {
             var name = this.hoverObjects[i].object.name;
@@ -744,8 +744,6 @@ ClimateApp.prototype.zoomOut = function() {
 
 ClimateApp.prototype.timeSlider = function(value) {
     //Adjust slider if allowed
-    //DEBUG
-    console.log("IE =", value);
     if(!this.animEnabled) {
         this.visGroup.position.x = -value;
     }
@@ -761,13 +759,10 @@ $(document).ready(function() {
     }
 
     //Only stay on page for fixed time
-    //DEBUG
-    /*
     var timeOut_s = 90;
     setTimeout(function() {
         window.open('promises.html', '_self');
     }, timeOut_s * 1000);
-    */
 
     //Initialise app
     var glSupport = $('#webGLError');
