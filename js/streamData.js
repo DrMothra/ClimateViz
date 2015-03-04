@@ -428,6 +428,8 @@ var meanMonthlyTemps = [
     [ 5.7, 6.2, 7.6, 10.2, 12.2, 15.1, 17.7,  -99,  -99, -99.9, 99.9, 99.9]
 ];
 
+var meanTempMarch = 6.9;
+var meanFutureTempMarch = 10.6;
 
 //Temperatures
 var ARCTIC = -7;
@@ -543,7 +545,11 @@ function getTimestreamData(dob, code, measure, container) {
                 console.log('response =', xmlHttp.responseText);
                 var value = getValue(xmlHttp.responseText);
                 var output = $('#'+container);
-                output.html(value != null ? value : 'Oops! No data!');
+                if(value === null) {
+                    //Use mean temp value
+                    value = container.indexOf('Present') >= 0 ? meanTempMarch : meanFutureTempMarch;
+                }
+                output.html(value);
                 //Update temperature image if required
                 if(container.indexOf('temperature') >= 0) {
                     updateTempImage(value, container);
