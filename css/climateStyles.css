@@ -186,12 +186,13 @@ input[type=range]:focus::-ms-fill-upper {
 input[type=text] {
     width: 25%;
     transform: scaleY(1.5);
-    font-size: 1.2em;
+    font-size: 1.5em;
     font-weight: bold;
     color: #666;
     border: 1px solid #271d1b;
     padding: 5px;
     letter-spacing: -1px;
+    margin-bottom: 2%;
 }
 input[type=button] {
     background: #271d1b;
@@ -210,6 +211,9 @@ input[type=number] {
     color: #666;
     border: 1px solid #271d1b;
 }
+.formColumns {
+    margin: 0 30%;
+}
 #info {
     padding: 2%;
     border-radius: 10px;
@@ -222,6 +226,9 @@ input[type=number] {
 }
 .right p {
     text-align: right;
+}
+.left {
+    text-align: left;
 }
 .noPad {
     padding: 0;

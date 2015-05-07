@@ -641,7 +641,6 @@ function getPastData(code, birthYear) {
 
     //Get month
     var currentMonth = monthNames[month];
-    $('#pastDate').html('Past - '+currentMonth);
 
     var output = $('#temperaturePast');
     output.html(temp);
@@ -649,7 +648,7 @@ function getPastData(code, birthYear) {
     updateTempImage(temp, 'temperaturePast');
 
     output = $('#pastDate');
-    output.html('Past - '+monthNames[month]+' '+birthYear);
+    output.html(monthNames[month]+' '+birthYear);
 }
 
 $(document).ready(function() {
