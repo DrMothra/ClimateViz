@@ -184,7 +184,7 @@ input[type=range]:focus::-ms-fill-upper {
     }
 }
 input[type=text] {
-    width: 25%;
+    width: 50%;
     transform: scaleY(1.5);
     font-size: 1.5em;
     font-weight: bold;
@@ -210,6 +210,11 @@ input[type=number] {
     font-weight: bold;
     color: #666;
     border: 1px solid #271d1b;
+}
+#q1,
+#q2 {
+    font-size: 0.8em;
+    line-height: 2em;
 }
 .formColumns {
     margin: 0 30%;

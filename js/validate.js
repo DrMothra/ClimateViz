@@ -7,11 +7,15 @@ var defaultPrediction = 'In 2045...';
 var date = null;
 var code = null;
 var validData = false;
+var q1, q2;
 
 function onGetData() {
     //Validate data
     predict = $('#promise').val();
-    if(predict === '' || predict === defaultPrediction) return 'badPromise';
+    q1 = $('#q1').val();
+    q2 = $('#q2').val();
+
+    if(predict === '' || q1 === '' || q2 === '') return 'badPromise';
 
     date = parseInt($('#dob').val());
 
@@ -47,12 +51,17 @@ function displayError(msg) {
 
 $(document).ready(function() {
     //GUI callbacks
-    var predictText = $('#promise');
-    predictText.val(defaultPrediction);
+
+    q2 = $('#q2');
     $("#getData").on('click', function (evt) {
         var status = onGetData();
         if (validData) {
-            window.open('predictions.html?dob=' + date + '&code=' + code + '&predict=' + predict, '_self');
+            sessionStorage.dob = date;
+            sessionStorage.code = code;
+            sessionStorage.predict = predict;
+            sessionStorage.q1 = q1;
+            sessionStorage.q2 = q2;
+            window.open('predictions.html', '_self');
         } else {
             switch (status) {
                 case 'badDate':

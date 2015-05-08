@@ -660,14 +660,17 @@ $(document).ready(function() {
 
     var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_16', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
         'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement/wp_ekx42t_1_ts_messages_24'];
-    var dob = parseParams('dob', window.location.search);
+    var dob = sessionStorage.dob;
     console.log('DOB =', dob);
 
-    var code = parseParams('code', window.location.search);
+    var code = sessionStorage.code;
     console.log('Code =', code);
 
-    var predictText = parseTextParams('predict', window.location.search);
+    var predictText = sessionStorage.predict;
     console.log('PredictText =', predictText);
+
+    console.log("Q1 =", sessionStorage.q1);
+    console.log("Q2 =", sessionStorage.q2);
 
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
