@@ -659,7 +659,7 @@ $(document).ready(function() {
     }, timeOut_s * 1000);
 
     var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_16', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
-        'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement/wp_ekx42t_1_ts_messages_24'];
+        'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
     var dob = sessionStorage.dob;
     console.log('DOB =', dob);
 
@@ -669,13 +669,12 @@ $(document).ready(function() {
     var predictText = sessionStorage.predict;
     console.log('PredictText =', predictText);
 
-    console.log("Q1 =", sessionStorage.q1);
-    console.log("Q2 =", sessionStorage.q2);
-
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
         sendTimestreamData(predictText, measurements[3]);
+        sendTimestreamData(sessionStorage.q1, measurements[4]);
+        sendTimestreamData(sessionStorage.q2, measurements[4]);
         getPastData(code, dob);
     }
 

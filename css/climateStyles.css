@@ -54,8 +54,10 @@ canvas {
     background-image: url("../images/sandyBackground.jpg");
 }
 .weather img {
-    height: 80%;
-    width: 70%;
+    height: 100%;
+    width: 100%;
+    vertical-align: middle;
+    margin-top: -5%;
 }
 .weather p {
     margin: 1% 0;
@@ -66,7 +68,7 @@ canvas {
     background-color: #f4eede;
 }
 .weatherInfo {
-    font-size: 1.5em;
+    font-size: 1.0em;
 }
 .header {
     margin-top: 2%;
@@ -186,7 +188,7 @@ input[type=range]:focus::-ms-fill-upper {
 input[type=text] {
     width: 50%;
     transform: scaleY(1.5);
-    font-size: 1.5em;
+    font-size: 2em;
     font-weight: bold;
     color: #666;
     border: 1px solid #271d1b;
@@ -213,8 +215,11 @@ input[type=number] {
 }
 #q1,
 #q2 {
-    font-size: 0.8em;
+    font-size: 1.2em;
     line-height: 2em;
+}
+#timeStamp {
+    width: 30%;
 }
 .formColumns {
     margin: 0 30%;
