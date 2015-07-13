@@ -234,13 +234,20 @@ ClimateApp.prototype.init = function(container, iPad) {
     this.bufferData = [];
     this.bufferSize = 0;
     //Get last 10 hours
-    var from = 1000 * 60 * 60 * 10;
-    this.getTimestreamData(measurements[0], from, null);
+    this.timeDelay = 60 * 60 * 13.6;
+    this.getTimestreamData(measurements[0], this.timeDelay, null);
 
     //DEBUG
     var _this = this;
     setInterval(function() {
-        _this.timeSeries[0].append(new Date().getTime() - 600000, Math.random());
+        var i;
+        if(_this.dataAvailable) {
+            for(i=_this.bufferSize; i<_this.bufferData.length; i+=2) {
+                _this.timeSeries[0].append(new Date().getTime() + (i*1000), _this.bufferData[i+1]);
+            }
+            _this.bufferSize = _this.bufferData.length;
+            _this.dataAvailable = false;
+        }
     }, 1000);
 
 };
@@ -329,13 +336,14 @@ ClimateApp.prototype.getTimestreamData = function(measure, fromTime, toTime) {
 
     var publicKey = 'c9bcd7f338';
     var timeStamp = Math.round(Date.now() / 1000);
-    var min = fromTime != undefined ? timeStamp - fromTime : null;
+    //var min = fromTime != undefined ? timeStamp - fromTime : null;
+    var min = 0;
     var max = timeStamp;
     var cmd = remoteURL + measure + '?pubkey=' + publicKey + '&now=' + timeStamp;
     if(min === null) {
         cmd += '&action=latest';
     } else {
-        cmd += '&min='+min + '&max='+max;
+        cmd += '&min='+min + '&max='+max + '&limit=100' + '&offset=205';
     }
 
     //DEBUG
@@ -375,12 +383,12 @@ $(document).ready(function() {
 
     var smoothieApp = new ClimateApp(charts);
     //Set any params
-    smoothieApp.setPixelDist(1000);
-    smoothieApp.setLineDist(2000);
+    smoothieApp.setPixelDist(100);
+    //smoothieApp.setLineDist(100);
     smoothieApp.setLineWidth(4);
     smoothieApp.setWaveDelay(dataDelay);
     smoothieApp.init();
-    smoothieApp.createScene();
+    //smoothieApp.createScene();
 
     //Check timestreams periodically
     /*
@@ -390,5 +398,5 @@ $(document).ready(function() {
         timeStreamCheckInterval);
     */
 
-    smoothieApp.run();
+    //smoothieApp.run();
 });

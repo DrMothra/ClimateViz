@@ -56,11 +56,11 @@ $(document).ready(function() {
     $("#getData").on('click', function (evt) {
         var status = onGetData();
         if (validData) {
-            sessionStorage.dob = date;
-            sessionStorage.code = code;
-            sessionStorage.predict = predict;
-            sessionStorage.q1 = q1;
-            sessionStorage.q2 = q2;
+            sessionStorage.setItem("dob", date);
+            sessionStorage.setItem("code", code);
+            sessionStorage.setItem("predict", predict);
+            sessionStorage.setItem("q1", q1);
+            sessionStorage.setItem("q2", q2);
             window.open('predictions.html', '_self');
         } else {
             switch (status) {

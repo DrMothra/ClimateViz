@@ -660,21 +660,24 @@ $(document).ready(function() {
 
     var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_26', 'measurement_container/wp_ekx42t_1_ts_rainfall_27',
         'measurement_container/wp_ekx42t_1_ts_temperature_29', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
-    var dob = sessionStorage.dob;
+    var dob = sessionStorage.getItem("dob");
     console.log('DOB =', dob);
 
-    var code = sessionStorage.code;
+    var code = sessionStorage.getItem("code");
     console.log('Code =', code);
 
-    var predictText = sessionStorage.predict;
+    var predictText = sessionStorage.getItem("predict");
     console.log('PredictText =', predictText);
 
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
+        //DEBUG
+        /*
         sendTimestreamData(predictText, measurements[3]);
-        sendTimestreamData(sessionStorage.q1, measurements[4]);
-        sendTimestreamData(sessionStorage.q2, measurements[4]);
+        sendTimestreamData(sessionStorage.getItem("q1"), measurements[4]);
+        sendTimestreamData(sessionStorage.getItem("q2"), measurements[4]);
+        */
         getPastData(code, dob);
     }
 
