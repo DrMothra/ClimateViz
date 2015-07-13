@@ -4,92 +4,44 @@
     <meta charset="UTF-8">
     <title>Promises and Wishes</title>
 
-    <script type="text/javascript" src="js/jquery-1.9.0.js"></script>
-    <script type="text/javascript" src="js/three_v68.js?v=0.68"></script>
-    <script type="text/javascript" src="js/TrackballControls.js"></script>
-    <script type="text/javascript" src="js/baseApp.js"></script>
-
-    <script id="vertexShader" type="x-shader/x-vertex">
-        varying vec2 vUv;
-        void main()
-        {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        }
-    </script>
-
-    <script id="fragmentShader" type="x-shader/x-vertex">
-        varying vec2 vUv;
-        uniform float intensity;
-        uniform sampler2D glowTexture;
-        void main()
-        {
-            vec4 tex = texture2D(glowTexture, vUv);
-            gl_FragColor = vec4(tex.r, tex.g, tex.b, tex.a);
-            gl_FragColor.a *= intensity;
-        }
-    </script>
-
-    <script type="text/javascript" src="js/detector.js"></script>
-    <script type="text/javascript" src="js/glowText.js"></script>
+    <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="js/skel.min.js"></script>
+    <script type="text/javascript" src="js/smoothie.js?v=0.1"></script>
+    <script type="text/javascript" src="js/baseSmoothApp.js?v=0.3"></script>
     <script type="text/javascript" src="js/climate.js"></script>
 
-    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
     <link href="css/climateStyles.css?v=0.1" rel="stylesheet" type="text/css">
+
 </head>
 <body class="sandy">
 
-<div class="pure-g banner">
-    <div class="pure-u-1-6">
-
-    </div>
-    <div class="pure-u-1-6 centred">
-        <img src="images/cloud.png">
-    </div>
-    <div class="pure-u-1-3 centred">
-        <img src="images/100hundredyears.png">
-    </div>
-    <div class="pure-u-1-6 centred">
-        <img src="images/sunCentre.png">
-    </div>
-    <div class="pure-u-1-6">
-
+<div id="banner">
+    <div class="row 0%">
+        <div class="4u">
+            <img src="images/cloud.png">
+        </div>
+        <div class="4u">
+            <img src="images/100hundredyears.png">
+        </div>
+        <div class="4u">
+            <img src="images/sunCentre.png">
+        </div>
     </div>
 </div>
 
-<div class="pure-g">
-    <div class="pure-u-1-12">
+<div id="graphs">
+    <canvas id="liveTemp">
 
-    </div>
-    <!-- Div which will hold the Output -->
-    <div id="WebGL-output" class="pure-u-5-6">
-        <p id="webGLError">
-            Visualisations are not supported on your browser<br>
-            Please use either Chrome or FireFox
-        </p>
-    </div>
-    <div class="pure-u-1-12">
+    </canvas>
+    <canvas id="livePrecip">
 
-    </div>
-</div>
+    </canvas>
+    <canvas id="futureTemp">
 
-<div class="controlButtons centred">
-    <button id="play_pause" class="pure-button"><img id="playToggle" src="images/pause.png"></button>
-    <button id="zoomIn" class="pure-button"><img id="zoomPlus" src="images/plus.png"></button>
-    <button id="zoomOut" class="pure-button"><img id="zoomMinus" src="images/minus.png"></button>
-    <button id="refresh" class="pure-button"><img src="images/refresh.png"></button>
-</div>
+    </canvas>
+    <canvas id="pastTemp">
 
-<div class="pure-g centred">
-    <div class="pure-u-1-6">
-        <a href="promises.html"><button id="back"><img src="images/goback_button.jpg"></button></a>
-    </div>
-    <div class="pure-u-2-3">
-        <input id="timeLine" type="range" min="0" max="3500" value="0">
-    </div>
-    <div class="pure-u-1-6">
-
-    </div>
+    </canvas>
 </div>
 
 <div id="info">

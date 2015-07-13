@@ -214,539 +214,136 @@ var minYearly =
         {"2014" : 0.1}
     ];
 
-function createLabel(name, position, scale, colour, fontSize, opacity) {
+var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
 
-    var fontface = "Helvetica";
-    var spacing = 10;
+var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_26', 'measurement_container/wp_ekx42t_1_ts_rainfall_27',
+    'measurement_container/wp_ekx42t_1_ts_temperature_29', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
 
-    var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
-    var metrics = context.measureText( name );
-    var textWidth = metrics.width;
-
-    canvas.width = textWidth + (spacing * 2);
-    canvas.width *= 2;
-    canvas.height = fontSize;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-
-    context.fillStyle = "rgba(255, 255, 255, 0.0)";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    var red = Math.round(colour[0]);
-    var green = Math.round(colour[1]);
-    var blue = Math.round(colour[2]);
-
-    context.fillStyle = "rgba(" + red + "," + green + "," + blue + "," + "1.0)";
-    context.font = fontSize + "px " + fontface;
-
-    context.fillText(name, canvas.width/2, canvas.height/2);
-
-    // canvas contents will be used for a texture
-    var texture = new THREE.Texture(canvas);
-    texture.needsUpdate = true;
-
-    //texture.needsUpdate = true;
-    var spriteMaterial = new THREE.SpriteMaterial({
-            //color: 0xff0000,
-            transparent: false,
-            opacity: opacity,
-            useScreenCoordinates: false,
-            map: texture}
-    );
-
-    var sprite = new THREE.Sprite(spriteMaterial);
-
-    sprite.scale.set(scale.x, scale.y, 1);
-    sprite.position.set(position.x, position.y, position.z);
-
-    return sprite;
-}
-
-function createGeometry(lineWidth, step, segments, vertices, indices, normals) {
-    //Create geometry
-    for(var t= 0, x=0; t<=2*Math.PI; t+=(2*Math.PI/segments), x+=step) {
-        var y = 3 * Math.sin(t);
-        vertices.push(x, y, 0);
-        vertices.push(x, y+lineWidth, 0);
-        normals.push(0, 0, 1);
-        normals.push(0 ,0, 1);
-    }
-
-    for(var i= 0, ind=0; i<segments; ++i, ind+=2) {
-        indices.push(ind+1, ind, ind+2);
-        indices.push(ind+2, ind+3, ind+1);
-    }
-
-
-}
 //Init this app from base
-function ClimateApp() {
-    BaseApp.call(this);
+function ClimateApp(containers) {
+    BaseSmoothApp.call(this, containers);
 }
 
-ClimateApp.prototype = new BaseApp();
+ClimateApp.prototype = new BaseSmoothApp();
 
 ClimateApp.prototype.init = function(container, iPad) {
-    BaseApp.prototype.init.call(this, container);
-    this.guiControls = null;
+    BaseSmoothApp.prototype.init.call(this, container);
+    this.lastValue = null;
+    this.dataAvailable = false;
 
-    //Platform specific
-    this.isiPad = iPad;
+    this.bufferData = [];
+    this.bufferSize = 0;
+    //Get last 10 hours
+    var from = 1000 * 60 * 60 * 10;
+    this.getTimestreamData(measurements[0], from, null);
 
-    //Time data
-    this.startYear = 1914;
+    //DEBUG
+    var _this = this;
+    setInterval(function() {
+        _this.timeSeries[0].append(new Date().getTime() - 600000, Math.random());
+    }, 1000);
 
-    //Parameters
-    this.totalDelta = 0;
-    this.animationTime = 0.01;
-    this.animating = true;
-    this.animationGeoms = [];
-    this.currentAnimation = 0;
-    this.glowTime = 0;
-
-    //Geometry animation
-    this.animLength = 3375;
-    this.animSpeed = 32;
-    this.animMargin = 10;
-    this.previousGroupPos = new THREE.Vector3();
-    this.segmentsPerPass = 6;
-
-    this.currentCamPath = 0;
-    this.moveTime = 0;
-    this.tempVec = new THREE.Vector3();
-    this.animEnabled = true;
-    this.zoomInc = 5;
-    //Mouse over
-    this.mouseOverEnabled = false;
 };
 
 ClimateApp.prototype.update = function() {
     //Perform any updates
-    BaseApp.prototype.update.call(this);
+    return;
+    var i;
+    BaseSmoothApp.prototype.update.call(this);
 
-    //Animate geometry
-    var delta = this.clock.getDelta();
-
-    //Perform mouse hover
-    var vector = new THREE.Vector3(( (this.mouse.endX-this.container.offsetLeft) / (this.container.clientWidth*this.widthScaleFactor) ) * 2 - 1, -( (this.mouse.endY-this.container.offsetTop) / this.container.offsetHeight ) * 2 + 1, 0.5);
-    this.projector.unprojectVector(vector, this.camera);
-
-    //DEBUG
-    //console.log("X = ", this.mouse.endX);
-
-    var raycaster = new THREE.Raycaster(this.camera.position, vector.sub(this.camera.position).normalize());
-
-    this.hoverObjects.length = 0;
-    this.hoverObjects = raycaster.intersectObjects(this.scene.children, true);
-
-    //Perform hover actions
-    $('#info').hide();
-    if(this.mouseOverEnabled && this.hoverObjects.length != 0) {
-        //DEBUG
-        //console.log("Hovered");
-
-        for(var i=0; i<this.hoverObjects.length; ++i) {
-            var name = this.hoverObjects[i].object.name;
-            if(name.indexOf('glow') >= 0) {
-                var elem = $('#info');
-                elem.css('top', this.mouse.endY - 15);
-                elem.css('left', this.mouse.endX + 15);
-                elem.show();
-
-                elem.html(infoText.getText(name));
-                break;
-            }
+    if(this.dataAvailable) {
+        for(i=this.bufferSize; i<this.bufferData.length; i+=2) {
+            this.timeSeries[0].append(new Date().getTime(), Math.random());
         }
+        this.bufferSize = this.bufferData.length;
+        this.dataAvailable = false;
     }
 
-    //Camera animation
-    if(this.animEnabled) {
-        this.moveTime += delta;
-        this.totalDelta += delta;
-    }
-
-    var path = this.camPaths[this.currentCamPath];
-
-    if(this.moveTime >= path.waitTime && this.animEnabled) {
-        //Start animating
-        this.mouseOverEnabled = false;
-        this.tempVec.copy(path.direction);
-        this.tempVec.multiplyScalar(delta * this.animSpeed);
-        this.visGroup.position.add(this.tempVec);
-        this.tempVec.subVectors(path.endPos, this.visGroup.position);
-        //Update slider
-        $('#timeLine').val(-this.visGroup.position.x);
-        if(this.visGroup.position.distanceTo(path.endPos) <= this.animMargin) {
-            this.moveTime = 0;
-            if(++this.currentCamPath >= this.camPaths.length) {
-                this.currentCamPath = 0;
-                this.resetScene();
-            }
-        }
-    }
-
-    var attachedGeom = null;
-
-    if(this.totalDelta >= this.animationTime && this.animEnabled && this.currentAnimation >=0) {
-        this.totalDelta = 0;
-        //Adjust indices
-        var geom = this.animationGeoms[this.currentAnimation];
-        if(geom.attachedGeom) {
-            attachedGeom = geom.attachedGeom;
-        }
-        var length = geom.attributes.index.array.length;
-        this.lastIndexPos += this.isiPad ? length/2 : this.segmentsPerPass;
-        if(this.lastIndexPos <= length) {
-            geom.offsets = [ { start: 0, count: this.lastIndexPos, index: 0 } ];
-        } else {
-            if(attachedGeom) {
-                attachedGeom.visible = true;
-            }
-            //Show temp label
-            if(this.currentAnimation > 0) {
-                var labelNum = this.currentAnimation - 1;
-                var label = this.labels[labelNum];
-                label.visible = true;
-            }
-
-            ++this.currentAnimation;
-            attachedGeom = null;
-            if(this.currentAnimation >= this.animationGeoms.length) this.currentAnimation = -1;
-            if(this.currentAnimation >= 1) this.animationTime = 0.1;
-            this.lastIndexPos = 0;
-        }
-    }
-
-    for(var i=0; i<this.glowMats.length; ++i) {
-        this.glowMats[i].uniforms.intensity.value =  0.4 + (Math.sin(this.glowTime)/2.5);
-    }
-
-    this.glowTime += 0.1;
 };
 
 ClimateApp.prototype.createScene = function() {
 
     //Init base createsScene
-    BaseApp.prototype.createScene.call(this);
 
-    this.lastIndexPos = 0;
-    this.labels = [];
-    var vertices = [];
-    var indices = [];
-    var lineWidth = 5;
-    var xStep = 10;
-    var dataItems = 200;
-    //Group to hold all geometry
-    this.visGroup = new THREE.Object3D();
-    this.visGroup.name = 'visGroup';
+};
 
-    //Segments
-    var segments = [];
-    for(var i=0; i<dataItems; ++i) {
-        segments.push(5, 5);
+ClimateApp.prototype.getValues = function(response, measure) {
+    //Get temperature value from response
+    var buffer;
+    var data = JSON.parse(response);
+    var index = measure.indexOf('wp_');
+    if(index >= 0) {
+        measure = measure.substr(index, measure.length-1);
+    } else {
+        return null;
     }
-    //Colours
-    var colours = [];
-    for(var i=0; i<dataItems; ++i) {
-        colours.push(0x3c5b8a, 0xfe6e5d);
-    }
-    //Positions
-    var xStart = -420;
-    //Alter starting position for differing screen widths
-    console.log("Width =", window.outerWidth);
-    if(window.outerWidth <= 1280) {
-        xStart = -320;
-    }
-    var lineStartX = xStart - 20;
-    var yStart = 175;
-    var zStart = -400;
-    var positions = [];
-    var normals = [];
-    var gap = 17;
-    var distance = 40;
-    for(var i=0; i<dataItems; ++i) {
-        positions.push(new THREE.Vector3(xStart, yStart, zStart-5));
-        positions.push(new THREE.Vector3(xStart+gap, yStart, zStart-5));
-        xStart += distance;
-    }
-    //Rotations
-    var rotations = [];
-    for(var i=0; i<dataItems; ++i) {
-        rotations.push(-Math.PI/2, -Math.PI/2);
+    if(data[measure] != undefined) {
+        buffer = data[measure];
+    } else {
+        buffer = data.data;
     }
 
-    //Scales
-    var scales = [];
-    for(var i=0; i<dataItems/2; ++i) {
-        var minYear = minYearly[i];
-        var minTemp = minYear[i+this.startYear];
-        var maxYear = maxYearly[i];
-        var maxTemp = maxYear[i+this.startYear];
-        scales.push(minTemp, maxTemp);
+    //console.log("Data =", data.data[0].value);
+
+    //console.log("Id =", buffer[0].id, buffer[0].value);
+
+    for(var i=0; i<buffer.length; ++i) {
+        this.bufferData.push(Date.parse(buffer[i].valid_time), buffer[i].value);
     }
 
-    //Labels
-    var labelYOffset = 10;
-    var labelPositions = [];
-    for(var i= 0; i<dataItems; i+=2) {
-        var avg = new THREE.Vector3();
-        avg.x = (positions[i].x + positions[i+1].x)/2;
-        avg.y = positions[i].y + labelYOffset;
-        avg.z = zStart;
-        labelPositions.push(avg);
-    }
+    return buffer.length;
+};
 
-    var endYear = this.startYear + (dataItems-1)/2;
-    var labelColour = [255, 255, 255];
-    var labelScale = new THREE.Vector3(75, 15, 1);
-
-    //Thresholds
-    var minThresh = 5.2;
-    var maxThresh = 13.8;
-
-    //Draw main line first
-    createGeometry(lineWidth, xStep, 400, vertices, indices, normals);
-    var lineGeom = new THREE.BufferGeometry();
-    lineGeom.attachedGeom = null;
-    lineGeom.dynamic = true;
-    lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-    var lineMat = new THREE.MeshLambertMaterial( {color : 0xffffff} );
-    lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
-    lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
-    lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
-    lineGeom.computeBoundingSphere();
-    this.animationGeoms.push(lineGeom);
-
-    var lineMesh = new THREE.Mesh(lineGeom, lineMat);
-    lineMesh.position.x = lineStartX;
-    console.log('X = ', lineMesh.position.x);
-    lineMesh.position.y = 171.5;
-    lineMesh.position.z = zStart;
-    this.visGroup.add(lineMesh);
-
-    //Add temperature geometries for each year
-    var scaleFactor = 0.4;
-    var tempYOffset = 21;
-    var tempPosition = new THREE.Vector3();
-
-    //Glow material for temperatures above threshold
+ClimateApp.prototype.getTimestreamData = function(measure, fromTime, toTime) {
+    //Get timestream data
     var _this = this;
-
-    this.glowMats = [];
-    var glowBlueMat = new THREE.ShaderMaterial(
+    //Construct http request
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if ( xmlHttp.readyState == 4 && xmlHttp.status == 200 )
         {
-            uniforms:
+            if ( xmlHttp.responseText == "Not found" )
             {
-                "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowBlue.png") }
-            },
-            vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-            fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-            transparent: true
-        }
-    );
-
-    this.glowMats.push(glowBlueMat);
-    var glowRedMat = new THREE.ShaderMaterial(
-        {
-            uniforms:
+                console.log('Not found');
+            }
+            else
             {
-                "intensity" : { type: "f", value: 0.5 },
-                "glowTexture": { type: "t", value: THREE.ImageUtils.loadTexture("images/glowRed.png") }
-            },
-            vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-            fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-            transparent: true
+                console.log('response =', xmlHttp.responseText);
+                var value = _this.getValues(xmlHttp.responseText, measure);
+                if(value != null) {
+                    _this.lastValue = value;
+                    _this.dataAvailable = true;
+                    //DEBUG
+                    console.log("Data =", _this.lastValue);
+                }
+            }
         }
-    );
-    this.glowMats.push(glowRedMat);
+    };
 
-    for(var i= 0; i<dataItems; ++i) {
+    //Check for data 16 minutes either side
+    var diff = 16 * 60;
 
-        var glow = false;
-        var year = 0;
-        if( scales[i] <= minThresh || scales[i] >= maxThresh) glow = true;
+    //code += timeOffset;
+    //var min = code - diff;
+    //var max = code + diff;
 
-        if(glow) {
-            var glowGeom = new THREE.BoxGeometry(30, 5, 0.1);
-            var mat = this.glowMats[i%2];
-            //var mat = new THREE.MeshBasicMaterial( {color: 0xff0000});
-            var glowMesh = new THREE.Mesh(glowGeom, mat);
-            glowMesh.position.x = positions[i].x+2;
-            var yOffset = i%2 ? 130 : 60;
-            glowMesh.position.y = positions[i].y - yOffset;
-            glowMesh.position.z = positions[i].z - 0.5;
-            glowMesh.rotation.z = rotations[i];
-            glowMesh.scale.x = scales[i] * scaleFactor * 3;
-            glowMesh.scale.y *= 5;
-            glowMesh.visible = false;
-            year = Math.floor(i/2) + this.startYear;
-            glowMesh.name = scales[i] <= minThresh ? 'glowCold'+year : 'glowWarm'+year;
-            this.visGroup.add(glowMesh);
-        }
-
-        vertices.length = 0;
-        indices.length = 0;
-        normals.length = 0;
-
-        createGeometry(lineWidth, xStep, segments[i], vertices, indices, normals);
-        lineGeom = new THREE.BufferGeometry();
-        lineGeom.attachedGeom = glow ? glowMesh : null;
-        lineGeom.dynamic = true;
-        lineGeom.offsets = [ { start: 0, count: 0, index: 0 } ];
-        //lineMat = new THREE.MeshBasicMaterial( {color : glow ? 0xF6D287 : colours[i]} );
-        lineMat = new THREE.MeshBasicMaterial( {color: colours[i]});
-
-        lineGeom.addAttribute( 'index', new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
-        lineGeom.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( vertices ), 3 ) );
-        //lineGeom.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( normals ), 3 ));
-        lineGeom.computeBoundingSphere();
-        this.animationGeoms.push(lineGeom);
-
-        //Glow effect for particular temperatures
-        lineMesh = new THREE.Mesh(lineGeom, lineMat);
-        lineMesh.position.x = positions[i].x;
-        lineMesh.position.y = positions[i].y;
-        lineMesh.position.z = positions[i].z;
-        lineMesh.rotation.z = rotations[i];
-        lineMesh.scale.x = scales[i] * scaleFactor;
-        this.visGroup.add(lineMesh);
-
-
-        //Temperature labels
-        tempPosition.x = lineMesh.position.x;
-        tempPosition.y = lineMesh.position.y - (scales[i]* (i%2 ? tempYOffset : tempYOffset+1));
-        tempPosition.z = lineMesh.position.z;
-        var label = createLabel(scales[i], tempPosition, labelScale, labelColour, 12, 1);
-        label.name = 'tempLabel'+i;
-        label.visible = false;
-        this.labels.push(label);
-        this.visGroup.add(label);
+    var publicKey = 'c9bcd7f338';
+    var timeStamp = Math.round(Date.now() / 1000);
+    var min = fromTime != undefined ? timeStamp - fromTime : null;
+    var max = timeStamp;
+    var cmd = remoteURL + measure + '?pubkey=' + publicKey + '&now=' + timeStamp;
+    if(min === null) {
+        cmd += '&action=latest';
+    } else {
+        cmd += '&min='+min + '&max='+max;
     }
 
-    //Labels
-    var label;
-    for(var year=this.startYear, i=0; year<endYear; ++year, ++i) {
-        label = createLabel(year, labelPositions[i], labelScale, labelColour, 12, 1);
-        this.visGroup.add(label);
-    }
-    //Add all geometry to main group
-    this.scene.add(this.visGroup);
+    //DEBUG
+    console.log('Cmd =', cmd);
 
-    //Animations
-    var startPositions = [];
-    var endPositions = [];
-    var camWaitTimes = [34, 5];
-    if(this.isiPad) {
-        camWaitTimes[0] = 3;
-        this.animSpeed = 50;
-        this.animLength = 3700;
-    }
-    this.camPaths = [];
-    //Phase 1
-    var groupX = this.visGroup.position.x;
-    var groupY = this.visGroup.position.y;
-    var groupZ = this.visGroup.position.z;
-    startPositions.push(new THREE.Vector3(groupX, groupY, groupZ));
-    endPositions.push(new THREE.Vector3(groupX-this.animLength, groupY, groupZ));
+    xmlHttp.open( "GET", cmd, true );
 
-    //Phase 2
-    startPositions.push(new THREE.Vector3(groupX-this.animLength, groupY, groupZ));
-    endPositions.push(new THREE.Vector3(-1510, 170, -2360));
-
-    for(var i=0; i<startPositions.length; ++i) {
-        var dirVec = new THREE.Vector3();
-        dirVec.subVectors(endPositions[i], startPositions[i]);
-        var pathProps = { waitTime : camWaitTimes[i], direction : dirVec.normalize(), endPos : endPositions[i] };
-        this.camPaths.push(pathProps);
-    }
-};
-
-ClimateApp.prototype.renderAllGeometry = function(visible, animations) {
-    //Render complete structure
-    var geom;
-    var length = animations != undefined ? (animations < 0 ? this.animationGeoms.length : animations) : this.animationGeoms.length;
-    for(var i=0; i<length; ++i) {
-        geom = this.animationGeoms[i];
-        geom.offsets = [ { start: 0, count: visible ? geom.attributes.index.array.length : 0, index: 0 } ];
-        geom.attachedGeom ? geom.attachedGeom.visible = visible : null;
-        //Labels
-        if(i>0) {
-            this.labels[i-1].visible = visible;
-        }
-    }
-};
-
-ClimateApp.prototype.restartGeometry = function() {
-    //Resume geometry rendering from previous point
-    this.renderAllGeometry(false);
-    this.renderAllGeometry(true, this.currentAnimation);
-    this.visGroup.position.set(this.previousGroupPos.x, this.previousGroupPos.y, this.previousGroupPos.z);
-    $('#timeLine').val(this.visGroup.position.x);
-};
-
-ClimateApp.prototype.resetScene = function() {
-    //Reset all geom offsets
-    for(var i=0; i<this.animationGeoms.length; ++i) {
-        var geom = this.animationGeoms[i];
-        geom.offsets = [ { start: 0, count: 0, index: 0 } ];
-        if(geom.attachedGeom) {
-            geom.attachedGeom.visible = false;
-        }
-    }
-
-    for(var i=0; i<this.labels.length; ++i) {
-        this.labels[i].visible = false;
-    }
-
-    //Reset animations
-    this.currentAnimation = 0;
-    this.animating = true;
-    this.animationTime = 0.01;
-    this.camAnimating = true;
-    this.moveTime = 0;
-    this.totalDelta = 0;
-    $('#playToggle').attr('src', "images/pause.png");
-    $('#timeLine').val(-3500);
-
-    //Reset cam position
-    this.visGroup.position.set(0, 0, 0);
-};
-
-ClimateApp.prototype.togglePlay = function() {
-    //Toggle vis animation
-    this.animEnabled = !this.animEnabled;
-
-    if(!this.animEnabled) {
-        this.previousGroupPos.copy(this.visGroup.position);
-    }
-    //Alter button images
-    var image = $('#playToggle');
-    var imageSrc = this.animEnabled ? 'images/pause.png' : 'images/play.png';
-    image.attr('src', imageSrc);
-    //See if we allow mouse overs
-    this.mouseOverEnabled = !this.animEnabled;
-
-    //Render everything if paused
-    !this.animEnabled ? this.renderAllGeometry(true) : this.restartGeometry();
-};
-
-ClimateApp.prototype.zoomIn = function() {
-    //Zoom into scene
-    this.visGroup.position.z += this.zoomInc;
-};
-
-ClimateApp.prototype.zoomOut = function() {
-    //Zoom into scene
-    this.visGroup.position.z -= this.zoomInc;
-};
-
-ClimateApp.prototype.timeSlider = function(value) {
-    //Adjust slider if allowed
-    if(!this.animEnabled) {
-        this.visGroup.position.x = -value;
-    }
+    xmlHttp.send( null );
 };
 
 $(document).ready(function() {
@@ -760,45 +357,38 @@ $(document).ready(function() {
 
     //Only stay on page for fixed time
     var timeOut_s = 90;
+    /*
     setTimeout(function() {
         window.open('promises.html', '_self');
     }, timeOut_s * 1000);
+    */
 
     //Initialise app
-    var glSupport = $('#webGLError');
-    glSupport.hide();
-    if ( ! Detector.webgl ) {
-        glSupport.show();
-    } else {
-        var container = document.getElementById("WebGL-output");
-        var app = new ClimateApp();
-        app.init(container, isiPad);
-        app.createScene();
+    //Set up smoothie charts
+    skel.init();
+    var dataDelay = 0;
+    var timeStreamCheckInterval = 1000;
+    var charts = [
+        { id: 'liveTemp', width: 0.85, height: 0.5, background: '#71c5ef', line: '#000000', delay: dataDelay, max: undefined, min: undefined, maxScale: 1.2, minScale: 1.2 }
 
-        //GUI callbacks
-        $("#play_pause").on('click', function() {
-            app.togglePlay();
-        });
-        $("#zoomIn").on('click', function() {
-            app.zoomIn();
-        });
-        $("#zoomOut").on('click', function() {
-            app.zoomOut();
-        });
-        $("#refresh").on('click', function() {
-            app.resetScene();
-        });
-        if(app.isIE) {
-            $("#timeLine").on('change', function() {
-                app.timeSlider(this.value);
-            });
-        } else {
-            $("#timeLine").on('input', function() {
-                app.timeSlider(this.value);
-            });
-        }
+    ];
 
+    var smoothieApp = new ClimateApp(charts);
+    //Set any params
+    smoothieApp.setPixelDist(1000);
+    smoothieApp.setLineDist(2000);
+    smoothieApp.setLineWidth(4);
+    smoothieApp.setWaveDelay(dataDelay);
+    smoothieApp.init();
+    smoothieApp.createScene();
 
-        app.run();
-    }
+    //Check timestreams periodically
+    /*
+    setInterval(function() {
+            smoothieApp.getTimestreamData(measurements[0]);
+    },
+        timeStreamCheckInterval);
+    */
+
+    smoothieApp.run();
 });

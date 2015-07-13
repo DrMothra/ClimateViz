@@ -658,8 +658,8 @@ $(document).ready(function() {
         window.open('promises.html', '_self');
     }, timeOut_s * 1000);
 
-    var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_16', 'measurement_container/wp_ekx42t_1_ts_precipitation_5',
-        'measurement_container/wp_ekx42t_1_ts_temperature_19', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
+    var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_26', 'measurement_container/wp_ekx42t_1_ts_rainfall_27',
+        'measurement_container/wp_ekx42t_1_ts_temperature_29', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
     var dob = sessionStorage.dob;
     console.log('DOB =', dob);
 
