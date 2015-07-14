@@ -21,9 +21,9 @@ function onGetData() {
 
     if(isNaN(date) || date < 1914 || date > 2015) return 'badDate';
 
-    //Allowable dates - October 2014 to March 2015
+    //Allowable dates - October 2014 to July 2015
     var lower = Math.round(new Date(2014, 9, 1, 0, 0, 0).getTime()/1000);
-    var upper = Math.round(new Date(2015, 2, 31, 23, 59, 59).getTime()/1000);
+    var upper = Math.round(new Date(2015, 6, 31, 23, 59, 59).getTime()/1000);
 
     code = parseInt($('#timeStamp').val());
 

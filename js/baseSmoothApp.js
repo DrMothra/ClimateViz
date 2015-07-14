@@ -36,7 +36,7 @@ BaseSmoothApp.prototype.init = function() {
     var pageWidth = window.innerWidth;
     var pageHeight = window.innerHeight;
     for(var i=0; i<this.containers.length; ++i) {
-        this.smoothies.push(new SmoothieChart( {grid:{fillStyle: this.containers[i].background}, millisPerPixel:this.mmPerPixel,
+        this.smoothies.push(new SmoothieChart( {grid:{fillStyle: this.containers[i].background, strokeStyle: 'transparent'}, millisPerPixel:this.mmPerPixel,
             labels: {disabled: true}, maxValue: this.containers[i].max, minValue: this.containers[i].min, maxValueScale: this.containers[i].maxScale,
             minValueScale: this.containers[i].minScale }));
         canvas = document.getElementById(this.containers[i].id);
@@ -47,6 +47,31 @@ BaseSmoothApp.prototype.init = function() {
         this.timeSeries.push(new TimeSeries());
         this.smoothies[i].addTimeSeries(this.timeSeries[i], { lineWidth: this.lineWidth, strokeStyle: this.containers[i].line });
     }
+};
+
+BaseSmoothApp.prototype.setMultipleData = function(container) {
+    //Draw multiple time series
+    var pageWidth = window.innerWidth;
+    var pageHeight = window.innerHeight;
+
+    this.smoothies.push(new SmoothieChart( {grid:{fillStyle: container[0].background, strokeStyle: 'transparent'}, millisPerPixel:this.mmPerPixel,
+        labels: {disabled: true}, maxValue: container[0].max, minValue: container[0].min, maxValueScale: container[0].maxScale,
+        minValueScale: container[0].minScale }));
+    var canvas = document.getElementById(container[0].id);
+    canvas.width = pageWidth * container[0].width;
+    canvas.height = pageHeight * container[0].height;
+    this.smoothies[this.smoothies.length-1].streamTo(canvas, container[0].delay);
+
+    var styles = [
+        {line: '#ff0000'},
+        {line: '#0000ff'}
+    ];
+
+    for(var i=0; i<2; ++i) {
+        this.timeSeries.push(new TimeSeries());
+        this.smoothies[this.smoothies.length-1].addTimeSeries(this.timeSeries[this.timeSeries.length-1], { lineWidth: this.lineWidth, strokeStyle: styles[i].line });
+    }
+
 };
 
 BaseSmoothApp.prototype.update = function() {
