@@ -57,7 +57,7 @@ BaseSmoothApp.prototype.setMultipleData = function(container) {
     var delta;
     this.startTime = new Date();
     this.lastTime = -1;
-    this.startYear = 1954;
+    this.startYear = 1953;
 
     this.smoothies.push(new SmoothieChart( {grid:{fillStyle: container[0].background, strokeStyle: 'transparent'},
         timestampFormatter: function(date) {
@@ -68,8 +68,7 @@ BaseSmoothApp.prototype.setMultipleData = function(container) {
             return delta + _this.startYear;
         },
         millisPerPixel: container[0].speed,
-        labels: {disabled: true, fillStyle: 'rgba(0,0,0,1)'},
-        maxValue: container[0].max, minValue: container[0].min, maxValueScale: container[0].maxScale, minValueScale: container[0].minScale }));
+        labels: {disabled: true, fillStyle: 'rgba(0,0,0,1)', fontSize: 14, fontFamily: 'Lucida Sans Unicode'}, maxValue: container[0].max, minValue: container[0].min, maxValueScale: container[0].maxScale, minValueScale: container[0].minScale }));
 
     var canvas = document.getElementById(container[0].id);
     canvas.width = pageWidth * container[0].width;

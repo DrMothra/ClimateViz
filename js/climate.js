@@ -1471,6 +1471,10 @@ ClimateApp.prototype.init = function(container, iPad) {
         this.dataStreams.push(streamInfo);
     }
 
+    this.dataStreams[0].defaultValue = 22.5;
+    this.dataStreams[1].defaultValue = 10;
+    this.dataStreams[2].defaultValue = 15;
+
     this.bufferData = [];
     this.bufferSize = 0;
     this.lastIndex = -1;
@@ -1573,10 +1577,17 @@ ClimateApp.prototype.getValues = function(streamId, response, measure) {
 
     //console.log("Id =", buffer[0].id, buffer[0].value);
 
-    for(var i=0; i<buffer.length; ++i) {
+    var i;
+    for(i=0; i<buffer.length; ++i) {
         this.dataStreams[streamId].bufferData.push(Date.parse(buffer[i].valid_time), buffer[i].value);
     }
 
+    if(this.dataStreams[streamId].bufferData.length === 0) {
+        this.dataStreams[streamId].bufferData.length = 200;
+        for(i=0; i<200; ++i) {
+            this.dataStreams[streamId].bufferData[i] = this.dataStreams[streamId].defaultValue;
+        }
+    }
     return 0;
 };
 
