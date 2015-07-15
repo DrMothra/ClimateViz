@@ -672,12 +672,9 @@ $(document).ready(function() {
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
-        //DEBUG
-        /*
         sendTimestreamData(predictText, measurements[3]);
         sendTimestreamData(sessionStorage.getItem("q1"), measurements[4]);
         sendTimestreamData(sessionStorage.getItem("q2"), measurements[4]);
-        */
         getPastData(code, dob);
     }
 

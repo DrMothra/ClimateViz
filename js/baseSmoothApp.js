@@ -53,10 +53,24 @@ BaseSmoothApp.prototype.setMultipleData = function(container) {
     //Draw multiple time series
     var pageWidth = window.innerWidth;
     var pageHeight = window.innerHeight;
+    var _this = this;
+    var delta;
+    this.startTime = new Date();
+    this.lastTime = -1;
+    this.startYear = 1954;
 
-    this.smoothies.push(new SmoothieChart( {grid:{fillStyle: container[0].background, strokeStyle: 'transparent'}, millisPerPixel:this.mmPerPixel,
-        labels: {disabled: true}, maxValue: container[0].max, minValue: container[0].min, maxValueScale: container[0].maxScale,
-        minValueScale: container[0].minScale }));
+    this.smoothies.push(new SmoothieChart( {grid:{fillStyle: container[0].background, strokeStyle: 'transparent'},
+        timestampFormatter: function(date) {
+            delta = date - _this.startTime;
+            delta = Math.round((delta/1000/12)*2.5);
+            if(delta < 0 || delta === _this.lastTime) return "";
+            _this.lastTime = delta;
+            return delta + _this.startYear;
+        },
+        millisPerPixel: container[0].speed,
+        labels: {disabled: true, fillStyle: 'rgba(0,0,0,1)'},
+        maxValue: container[0].max, minValue: container[0].min, maxValueScale: container[0].maxScale, minValueScale: container[0].minScale }));
+
     var canvas = document.getElementById(container[0].id);
     canvas.width = pageWidth * container[0].width;
     canvas.height = pageHeight * container[0].height;

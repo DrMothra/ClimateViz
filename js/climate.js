@@ -327,7 +327,7 @@ var maxMonthyTemp = [
     2.8,
     9.5,
     11.8,
-    14,
+    14.3,
     19.4,
     19.2,
     17.1,
@@ -343,7 +343,7 @@ var maxMonthyTemp = [
     16.8,
     18.9,
     19.3,
-    18.3,
+    18,
     12.6,
     9.8,
     6.4,
@@ -351,7 +351,7 @@ var maxMonthyTemp = [
     5.9,
     9.5,
     11.8,
-    15,
+    15.3,
     18.9,
     17.1,
     18.7,
@@ -831,7 +831,7 @@ var minMonthlyTemp = [
     -0.1,
     -0.5,
     2.2,
-    3,
+    3.3,
     7.2,
     9.6,
     10.2,
@@ -922,7 +922,7 @@ var minMonthlyTemp = [
     11.4,
     11.1,
     7.7,
-    3.3
+    3.3,
     -0.8,
     0.9,
     1.6,
@@ -1443,7 +1443,7 @@ var minMonthlyTemp = [
 var remoteURL = 'http://www.timestreams.org.uk/wp-content/plugins/timestreams/2/';
 
 var measurements = ['measurement_container/wp_ekx42t_1_ts_temperature_26', 'measurement_container/wp_ekx42t_1_ts_rainfall_27',
-    'measurement_container/wp_ekx42t_1_ts_temperature_29', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
+    'measurement_container/wp_ekx42t_1_ts_wind_speed_28', 'measurement/wp_ekx42t_1_ts_messages_24', 'measurement/wp_ekx42t_1_ts_messages_25'];
 
 var NUM_STREAMS = 3;
 
@@ -1478,13 +1478,22 @@ ClimateApp.prototype.init = function(container, iPad) {
 
     //Set up multiple stream graphs
     var multipleData = [
-        { id: 'pastTemp', width: 0.85, height: 0.15, background: 'rgba(0,0,0,0)', line: '#000000', delay: 0, max: undefined, min: undefined, maxScale: 1.2, minScale: 1.2 }
+        { id: 'pastTempGraph', width: 0.85, height: 0.175, background: 'rgba(0,0,0,0)', line: '#000000', delay: 0, speed: 100, max: undefined, min: undefined, maxScale: 1.2, minScale: 1.2 }
     ];
     this.setMultipleData(multipleData);
+    this.maxStreamNumber = this.timeSeries.length - 2;
+    this.minStreamNumber = this.timeSeries.length - 1;
     //Get latest data
     for(i=0; i<NUM_STREAMS; ++i) {
         this.getTimestreamData(i, measurements[i], 0);
     }
+
+    //Add text to canvas
+    var canvas = document.getElementById("pastTempGraph");
+    var ctx = canvas.getContext("2d");
+    ctx.font="30px Georgia";
+    ctx.fillStyle = '#000000';
+    ctx.fillText("1954", 100, 30);
 
     var _this = this;
     setInterval(function() {
@@ -1510,10 +1519,10 @@ ClimateApp.prototype.init = function(container, iPad) {
 
         if(_this.renderMinMax) {
             for(i=0; i<maxMonthyTemp.length; ++i) {
-                _this.timeSeries[3].append(new Date().getTime() + (i*1000), maxMonthyTemp[i]);
+                _this.timeSeries[_this.maxStreamNumber].append(new Date().getTime() + (i*400), maxMonthyTemp[i]);
             }
             for(i=0; i<minMonthlyTemp.length; ++i) {
-                _this.timeSeries[4].append(new Date().getTime() + (i*1000), minMonthlyTemp[i]);
+                _this.timeSeries[_this.minStreamNumber].append(new Date().getTime() + (i*400), minMonthlyTemp[i]);
             }
         }
 
@@ -1585,11 +1594,14 @@ ClimateApp.prototype.getTimestreamData = function(streamId, measure, offset) {
             }
             else
             {
+                //DEBUG
                 console.log('response =', xmlHttp.responseText);
                 var value = _this.getValues(streamId, xmlHttp.responseText, measure);
                 if(value != null) {
                     if(value > 0) {
                         _this.dataStreams[streamId].lastIndex = value;
+                        //DEBUG
+                        console.log("Stream ", streamId, " index ", value);
                     } else {
                         _this.dataStreams[streamId].dataAvailable = true;
                     }
@@ -1607,7 +1619,7 @@ ClimateApp.prototype.getTimestreamData = function(streamId, measure, offset) {
 
     var publicKey = 'c9bcd7f338';
     var timeStamp = Math.round(Date.now() / 1000);
-    var fromTime = 60 * 60 * 200;
+    var fromTime = 60 * 100 * 5;
     var min = offset != 0 ? timeStamp - fromTime : null;
     var max = timeStamp;
     var cmd = remoteURL + measure + '?pubkey=' + publicKey + '&now=' + timeStamp;
@@ -1626,21 +1638,11 @@ ClimateApp.prototype.getTimestreamData = function(streamId, measure, offset) {
 };
 
 $(document).ready(function() {
-    //See if we are ipad
-    var isiPad = false;
-    var plat = navigator.platform;
-
-    if(plat === 'iPad') {
-        isiPad = true;
-    }
-
-    //Only stay on page for fixed time
-    var timeOut_s = 90;
-    /*
-    setTimeout(function() {
-        window.open('promises.html', '_self');
-    }, timeOut_s * 1000);
-    */
+    //Loop page after fixed time
+    var pageRefreshTime = 240 * 1000;
+    setInterval(function() {
+        location.reload();
+    }, pageRefreshTime);
 
     //Initialise app
     //Set up smoothie charts
@@ -1648,9 +1650,9 @@ $(document).ready(function() {
     var dataDelay = 0;
     var timeStreamCheckInterval = 1000;
     var charts = [
-        { id: 'liveTemp', width: 0.85, height: 0.15, background: 'rgba(0,0,0,0)', line: '#000000', delay: dataDelay, max: 35, min: 10, maxScale: 1.2, minScale: 1.2 },
-        { id: 'livePrecip', width: 0.85, height: 0.15, background: 'rgba(0,0,0,0)', line: '#000000', delay: dataDelay, max: 25, min: 0, maxScale: 1.2, minScale: 1.2 },
-        { id: 'futureTemp', width: 0.85, height: 0.15, background: 'rgba(0,0,0,0)', line: '#000000', delay: dataDelay, max: 35, min: 10, maxScale: 1.2, minScale: 1.2 }
+        { id: 'liveTempGraph', width: 0.85, height: 0.175, background: 'rgba(0,0,0,0)', line: '#000000', delay: dataDelay, max: 35, min: 10, maxScale: 1.2, minScale: 1.2 },
+        { id: 'livePrecipGraph', width: 0.85, height: 0.175, background: 'rgba(0,0,0,0)', line: '#000000', delay: dataDelay, max: 25, min: -5, maxScale: 1.2, minScale: 1.2 },
+        { id: 'windSpeedGraph', width: 0.85, height: 0.175, background: 'rgba(0,0,0,0)', line: '#000000', delay: dataDelay, max: undefined, min: -5, maxScale: 1.2, minScale: 1.2 }
     ];
 
     var smoothieApp = new ClimateApp(charts);

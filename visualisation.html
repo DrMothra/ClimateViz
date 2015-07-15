@@ -7,10 +7,10 @@
     <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="js/skel.min.js"></script>
     <script type="text/javascript" src="js/smoothie.js?v=0.1"></script>
-    <script type="text/javascript" src="js/baseSmoothApp.js?v=0.4"></script>
-    <script type="text/javascript" src="js/climate.js?v=0.1"></script>
+    <script type="text/javascript" src="js/baseSmoothApp.js?v=0.7"></script>
+    <script type="text/javascript" src="js/climate.js?v=0.6"></script>
 
-    <link href="css/climateStyles.css?v=0.1" rel="stylesheet" type="text/css">
+    <link href="css/climateStyles.css?v=0.3" rel="stylesheet" type="text/css">
 
 </head>
 <body class="sandy">
@@ -18,46 +18,52 @@
 <div id="banner">
     <div class="row 0%">
         <div class="4u">
-            <img src="images/cloud.png">
+            &nbsp;
+        </div>
+        <div id="visTitle" class="4u">
+            <p>
+                Weather Station, FACT Liverpool
+            </p>
         </div>
         <div class="4u">
-            <img src="images/100hundredyears.png">
-        </div>
-        <div class="4u">
-            <img src="images/sunCentre.png">
+            &nbsp;
         </div>
     </div>
 </div>
 
 <div id="graphs">
-    <canvas id="liveTemp">
+    <div id="liveTemp">
+        <p>
+            Live Temperature (Celsius)
+        </p>
+        <canvas id="liveTempGraph">
 
-    </canvas>
-    <canvas id="livePrecip">
+        </canvas>
+    </div>
+    <div id="livePrecip">
+        <p>
+            Live Rainfall (mm)
+        </p>
+        <canvas id="livePrecipGraph">
 
-    </canvas>
-    <canvas id="futureTemp">
+        </canvas>
+    </div>
+    <div id="windSpeed">
+        <p>
+            Live Windspeed (mph)
+        </p>
+        <canvas id="windSpeedGraph">
 
-    </canvas>
-    <canvas id="pastTemp">
+        </canvas>
+    </div>
+    <div id="pastTemp">
+        <p>
+            Historical Temperature - Yearly Min/Max
+        </p>
+        <canvas id="pastTempGraph">
 
-    </canvas>
-    <p>Live Temperature / Live Rainfall / Future Temperature / Historical Temperature</p>
-</div>
-
-<div id="info">
-
-</div>
-
-<div id="footerLinks" class="centred">
-    <ul>
-        <li><span>Home |</span></li>
-        <li><span>One Hundred Years of Weather |</span></li>
-        <li><span>Your Predictions</span></li>
-    </ul>
-</div>
-<div id="footerImage">
-    <span><img src="images/footerClouds.png"></span>
+        </canvas>
+    </div>
 </div>
 
 </body>

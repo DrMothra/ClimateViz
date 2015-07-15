@@ -56,6 +56,14 @@ canvas {
 }
 #graphs {
     text-align: center;
+    margin-left: 10%;
+}
+#graphs p {
+    text-align: left;
+}
+#visTitle {
+    font-size: 2vw;
+    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'DejaVu Sans', sans-serif;
 }
 .sandy {
     background-image: url("../images/sandyBackground.jpg");
