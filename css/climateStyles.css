@@ -63,7 +63,7 @@ canvas {
 }
 #visTitle {
     font-size: 2vw;
-    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'DejaVu Sans', sans-serif;
+    font-family: Georgia, serif;
 }
 .sandy {
     background-image: url("../images/sandyBackground.jpg");
