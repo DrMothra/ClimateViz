@@ -60,6 +60,7 @@ canvas {
 }
 #graphs p {
     text-align: left;
+    font-size: 2vw;
 }
 #visTitle {
     font-size: 2vw;

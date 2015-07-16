@@ -477,11 +477,13 @@ function parseTextParams(param, paramText) {
 function getValue(response) {
     //Get temperature value from response
     var data = JSON.parse(response);
-    if(data.data.length == 0) return null;
+    var length = data.data.length;
+    if(length === 0) return null;
 
-    console.log("Data =", data.data[0].value);
+    //DEBUG
+    //console.log("Data =", data.data[0].value);
 
-    return data.data[0].value;
+    return data.data[length-1].value;
 }
 
 function updateTempImage(value, container) {
@@ -672,9 +674,11 @@ $(document).ready(function() {
     if(dob!= null && code!=null) {
         getTimestreamData(dob, code, measurements[0], 'temperaturePresent');
         getTimestreamData(dob, code, measurements[2], 'temperatureFuture');
+        /*
         sendTimestreamData(predictText, measurements[3]);
         sendTimestreamData(sessionStorage.getItem("q1"), measurements[4]);
         sendTimestreamData(sessionStorage.getItem("q2"), measurements[4]);
+        */
         getPastData(code, dob);
     }
 
